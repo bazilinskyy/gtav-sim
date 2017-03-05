@@ -36,6 +36,9 @@
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NativeUI">
+      <HintPath>..\..\scripts\NativeUI.dll</HintPath>
+    </Reference>
     <Reference Include="ScriptHookVDotNet, Version=2.9.4.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\mods\ScriptHookVDotNet\SDK\ScriptHookVDotNet.dll</HintPath>
