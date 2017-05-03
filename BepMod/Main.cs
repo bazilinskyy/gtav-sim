@@ -1,129 +1,273 @@
-﻿using GTA;
+﻿using System.Collections.Generic;
+using System.Drawing;
+
+using GTA;
 using GTA.Math;
 using GTA.Native;
+
 using NativeUI;
-using System.Collections.Generic;
 
-namespace BepMod
-{
-    public class Main : Script
-    {
-        private HashSet<int> _vehiclePool = new HashSet<int>();
-        private bool _removeVehicles = false;
-        private UIMenu _menu;
-        private InstructionalButton _button;
-        private MenuPool _menuPool = new MenuPool();
-        private Vehicle _vehicle;
-        private bool _hudHidden = false;
+using static BepMod.Util;
+using System;
+using System.Threading;
 
-        public Main()
-        {
-            _menu = new UIMenu("BepMod", "~b~Bicycle Experiment Program");
+using System.Windows.Forms;
 
-            _menu.AddItem(new UIMenuItem("Spawn bicycle", "You know you want it!"));
-            _menu.AddItem(new UIMenuItem("Load scenario", "Example scenario"));
-            _menu.AddItem(new UIMenuCheckboxItem("Remove traffic", false, "All except for your bike"));
-            _menu.AddItem(new UIMenuCheckboxItem("Hide radar and HUD", false, "For the full immersive experience"));
-            _menu.RefreshIndex();
+namespace BepMod {
+    public class Main : Script {
+        private Scenario scenario;
+        private List<Scenario> scenarios = new List<Scenario>();
+        private int scenariosCount = 0;
+        private int scenarioIndex = 0;
 
-            _menu.OnItemSelect += _menu_OnItemSelect;
-            _menu.OnCheckboxChange += _menu_OnCheckboxChange;
+        private UIMenu menu;
+        private MenuPool menuPool = new MenuPool();
 
-            _menuPool.Add(_menu);
+        private bool renderPosition = false;
+        private bool renderRay = false;
+        private UIText positionMessage;
 
-            UI.Notify("For the Bicycle Experiment Program press ~b~B");
+        public Main() {
+                Log("Main.Main()");
 
-            _button = new InstructionalButton("B", "Bicycle Experiment Program");
-            _menu.AddInstructionalButton(_button);
+                positionMessage = new UIText("",
+                    new Point((int) System.Math.Round((double) UI.WIDTH / 2), 20),
+                    .8f,
+                    Color.Yellow,
+                    GTA.Font.ChaletComprimeCologne,
+                    true
+                );
 
-            KeyDown += Main_KeyDown;
-            Tick += Main_Tick;
-        }
-        
-        public void _menu_OnItemSelect(UIMenu sender, UIMenuItem selectedItem, int index)
-        {
-            if (index == 0)
-            {
+
+                scenarios.Add(new Scenario1());
+                // scenarios.Add(new Scenario2());
+                // scenarios.Add(new Scenario3());
+
+                menu = new UIMenu("BepMod", "");
+
+                foreach(Scenario scenario in scenarios) {
+                    scenariosCount++;
+
+                    UIMenu scenarioSubMenu = menuPool.AddSubMenu(
+                        menu,
+                        String.Format("Scenario {0}", scenariosCount.ToString())
+                    );
+
+                    scenarioSubMenu.AddItem(new UIMenuItem(
+                        "Run",
+                        ""
+                    ));
+
+                    int pointIndex = 0;
+
+                    scenarioSubMenu.OnItemSelect += (UIMenu sender, UIMenuItem item, int index) => {
+                        if (index == 0) {
+                            RunScenario(scenarioIndex - 1);
+                            menu.Visible = false;
+                            scenarioSubMenu.Visible = false;
+                        }
+                    };
+
+                    var pointsList = new List<dynamic> { };
+                    for (int i = 0; i < scenario.points.Length; i++) {
+                        pointsList.Add(String.Format("Point {0}", i));
+                    }
+
+                    UIMenuListItem pointMenuListItem = new UIMenuListItem("Teleport", pointsList, 0);
+                    scenarioSubMenu.AddItem(pointMenuListItem);
+                    scenarioSubMenu.OnItemSelect += (sender, item, index) => {
+                        if (index == 1) {
+                            Vector3 position = scenario.points[pointIndex];
+                            UI.Notify("Teleport to: " + position.ToString());
+                            Game.Player.Character.Position = position;
+                        }
+                    };
+
+                    scenarioSubMenu.OnListChange += (sender, item, index) => {
+                        if (item == pointMenuListItem) {
+                            pointIndex = index;
+                        }
+                    };
+                }
+                menu.AddItem(new UIMenuItem("Stop running scenario", ""));
+
+                var debugLevels = new List<dynamic> {
+                    "None",
+                    "Info",
+                    "Verbose",
+                    "Full"
+                };
+
+                UIMenuListItem debugLevelMenuItem = new UIMenuListItem("Debug level", debugLevels, 0);
+                menu.AddItem(debugLevelMenuItem);
+
+                menu.OnListChange += (sender, item, index) => {
+                    if (item == debugLevelMenuItem) {
+                        debugLevel = index;
+                    }
+                };
+                    
+                menu.AddItem(new UIMenuCheckboxItem("Show location", false, ""));
+                menu.AddItem(new UIMenuCheckboxItem("Show target object", false, ""));
+                menu.AddItem(new UIMenuItem("Remove all vehicles", ""));
+                menu.AddItem(new UIMenuItem("Remove all pedestrians", ""));
+
+                menu.RefreshIndex();
+
+                menu.OnItemSelect += Menu_OnItemSelect;
+                menu.OnCheckboxChange += Menu_OnCheckboxChange;
+
+                menuPool.Add(menu);
+
+                UI.Notify("For the Bicycle Experiment Program press ~b~B");
+
+                menu.AddInstructionalButton(new InstructionalButton("B", "BepMod menu"));
+                menu.AddInstructionalButton(new InstructionalButton("N", "Save location"));
+                menu.AddInstructionalButton(new InstructionalButton("I", "Load scenario"));
+
+                KeyDown += DoKeyDown;
+                Tick += MainTick;
+
+                if (Game.IsScreenFadedOut) {
+                    Game.FadeScreenIn(0);
+                }
+            }
+
+            ~Main() {
+                Log("Main.~Main()");
+                StopScenario();
+                ClearVehiclePool();
+                Log("Main.~Main(): shut down complete");
+            }
+
+        private void DoKeyDown(object sender, System.Windows.Forms.KeyEventArgs e) {
+            if (e.KeyCode == System.Windows.Forms.Keys.B) {
+                menu.Visible = !menu.Visible;
+            } else if (e.KeyCode == System.Windows.Forms.Keys.I) {
+                RunScenario(0);
+            } else if (e.KeyCode == System.Windows.Forms.Keys.N) {
                 Vector3 position = Game.Player.Character.Position;
                 float heading = Game.Player.Character.Heading;
 
-                _vehicle = World.CreateVehicle(VehicleHash.Cruiser, position, heading);
+                String location = String.Format(
+                    "new Location({0}f, {1}f, {2}f, {3}f)",
+                    position.X.ToString("0.0"),
+                    position.Y.ToString("0.0"),
+                    position.Z.ToString("0.0"),
+                    heading.ToString("0.0")
+                );
 
-                _vehiclePool.Add(_vehicle.Handle);
-                _vehicle.PlaceOnGround();
+                UI.Notify("Clipboard:\n" + location);
 
-                Game.Player.Character.SetIntoVehicle(_vehicle, VehicleSeat.Driver);
+                Log(location, "location");
 
-                UI.Notify("Drive safely!");
-            }
-            else if (index == 1)
-            {
-                Game.FadeScreenOut(2);
-
-                Vector3 position = new Vector3(190f, -1019f, 29f);
-                float heading = 70f;
-
-                _vehiclePool.Clear();
-
-                GameplayCamera.RelativeHeading = heading;
-                _vehicle = World.CreateVehicle(VehicleHash.Cruiser, position, heading);
-
-                _vehiclePool.Add(_vehicle.Handle);
-                _vehicle.PlaceOnGround();
-
-                Game.Player.Character.SetIntoVehicle(_vehicle, VehicleSeat.Driver);
-                
-                UI.Notify("Scenario loaded");
-                _menu.Visible = false;
+                // http://stackoverflow.com/questions/3546016/how-to-copy-data-to-clipboard-in-c-sharp
+                Thread thread = new Thread(() => Clipboard.SetText(location));
+                thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
+                thread.Start();
+                thread.Join(); //Wait for the thread to end
             }
         }
-        
-        private void _menu_OnCheckboxChange(UIMenu sender, UIMenuCheckboxItem checkboxItem, bool Checked)
-        {
+
+        public void Menu_OnItemSelect(UIMenu sender, UIMenuItem selectedItem, int index) {
+            scenarioIndex = index;
+
+            if (index == scenariosCount) {
+                StopScenario();
+            } else if (index == (scenariosCount + 4)) {
+                ClearVehiclePool();
+                DoRemoveVehicles();
+            } else if (index == (scenariosCount + 5)) {
+                ClearPedPool();
+                DoRemovePeds();
+            }
+        }
+
+        private void StopScenario() {
+            Log("Main.StopScenario()");
+            if (scenario != null) {
+                Log("scenario != null");
+                scenario.Stop();
+                scenario = null;
+            }
+        }
+
+        private void RunScenario(int index) {
+            Log("Main.RunScenario1()");
+            Game.FadeScreenOut(100);
+            Wait(100);
+            StopScenario();
+            scenario = scenarios[index];
+            scenario.Run();
+            Wait(100);
+            Game.FadeScreenIn(100);
+        }
+
+        private void Menu_OnCheckboxChange(UIMenu sender, UIMenuCheckboxItem checkboxItem, bool Checked) {
             int index = sender.MenuItems.IndexOf(checkboxItem);
-            if (index == 2)
-            {
-                _removeVehicles = Checked;
-                UI.Notify("Remove traffic: ~b~" + _removeVehicles.ToString());
-            }
-            else if (index == 3)
-            {
-                _hudHidden = Checked;
-                UI.Notify("Hud hidden: ~b~" + _hudHidden.ToString());
+
+            if (index == (scenariosCount + 2)) {
+                renderPosition = Checked;
+            } else if (index == (scenariosCount + 3)) {
+                renderRay = Checked;
             }
         }
 
-        private void doRemoveVehicles()
-        {
-            foreach (Vehicle vehicle in World.GetAllVehicles())
-            {
-                if (!_vehiclePool.Contains(vehicle.Handle))
-                {
-                    vehicle.Delete();
+        private void MainTick(object sender, EventArgs e) {
+            if (renderPosition) {
+                Vector3 position = Game.Player.Character.Position;
+                float heading = Game.Player.Character.Heading;
+
+                positionMessage.Caption = String.Format(
+                    "{0}, {1}, {2}, {3}",
+                    position.X.ToString("0.0"),
+                    position.Y.ToString("0.0"),
+                    position.Z.ToString("0.0"),
+                    heading.ToString("0.0")
+                );
+
+                positionMessage.Draw();
+            } else if (positionMessage != null && positionMessage.Caption != "") {
+                positionMessage.Caption = "";
+                positionMessage.Draw();
+            }
+
+            if (renderRay) {
+                RaycastResult ray = World.RaycastCapsule(GameplayCamera.Position,
+                    GameplayCamera.Position + RotToDir(GameplayCamera.Rotation) * 1000.0f,
+                    20.0f,
+                    IntersectOptions.Everything);
+
+                if (ray.HitEntity != null) {
+                    Ped ped = new Ped(ray.HitEntity.Handle);
+
+                    int uiWidth = (int) System.Math.Round((double) UI.WIDTH);
+                    int uiHeight = (int) System.Math.Round((double) UI.HEIGHT);
+                    int containerWidth = 400;
+                    int containerHeight = 110;
+
+                    UIContainer container = new UIContainer(
+                        new Point(uiWidth - containerWidth, uiHeight - containerHeight),
+                        new Size(new Point(containerWidth, containerHeight))
+                    );
+
+                    container.Items.Add(new UIText("Handle: " + ped.Handle.ToString(), new Point(20, 12), 0.3f, Color.Yellow));
+                    container.Items.Add(new UIText("Hash: " + ped.Model.GetHashCode().ToString(), new Point(20, 24), 0.3f, Color.Yellow));
+                    container.Items.Add(new UIText("Heading: " + ped.Heading.ToString(), new Point(20, 36), 0.3f, Color.Yellow));
+                    container.Items.Add(new UIText("Rotation: " + ped.Rotation.ToString(), new Point(20, 48), 0.3f, Color.Yellow));
+                    container.Items.Add(new UIText("Position: " + ped.Position.ToString(), new Point(20, 60), 0.3f, Color.Yellow));
+                    container.Items.Add(new UIText("Velocity: " + ped.Velocity.ToString(), new Point(20, 72), 0.3f, Color.Yellow));
+                    container.Items.Add(new UIText("Dimentions: " + ped.Model.GetDimensions().ToString(), new Point(20, 84), 0.3f, Color.Yellow));
+
+                    container.Draw();
                 }
             }
-        }
 
-        private void Main_Tick(object sender, System.EventArgs e)
-        {
-            _menuPool.ProcessMenus();
+            menuPool.ProcessMenus();
 
-            if (_removeVehicles)
-            {
-                doRemoveVehicles();
-            }
-
-            if (_hudHidden)
-            {
-                Function.Call(Hash.HIDE_HUD_AND_RADAR_THIS_FRAME, true);
-            }
-        }
-
-        private void Main_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
-        {
-            if (e.KeyCode == System.Windows.Forms.Keys.B)
-            {
-                _menu.Visible = !_menu.Visible;
+            Util.DoTick();
+            if (scenario != null) {
+                scenario.DoTick();
             }
         }
     }
