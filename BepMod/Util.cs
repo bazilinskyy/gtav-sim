@@ -9,8 +9,11 @@ using NativeUI;
 
 
 namespace BepMod {
+    enum TrafficLightColor { GREEN = 0, RED, YELLOW, AUTO }
+
+
     static class Util {
-        public static int debugLevel = 0;
+        public static int debugLevel = 3;
 
         public static String[] messages = new String[20];
 
@@ -19,10 +22,22 @@ namespace BepMod {
         public static HashSet<int> vehiclePool = new HashSet<int>();
         public static HashSet<int> pedPool = new HashSet<int>();
 
+        public static List<int> trafficSignalHashes = new List<int> {
+            -655644382,
+            862871082,
+            1043035044
+        };
+        public static TrafficLightColor trafficLightsColor = TrafficLightColor.AUTO;
+
+        public static System.Media.SoundPlayer gpsSoundLeft = new System.Media.SoundPlayer();
+        public static System.Media.SoundPlayer gpsSoundRight = new System.Media.SoundPlayer();
+        public static System.Media.SoundPlayer gpsSoundStraight = new System.Media.SoundPlayer();
+        public static string audioBase = ".\\scripts\\GPS\\Audio\\snoop_dogg\\";
+
         static Util() { }
 
         public static void Log(string message, string name = "general") {
-            using(StreamWriter w = File.AppendText(String.Format("log/{0}.log", name))) {
+            using(StreamWriter w = File.AppendText(String.Format("bepmod_{0}.log", name))) {
                 w.WriteLine("[{0}] {1}",
                     DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     message
@@ -32,6 +47,14 @@ namespace BepMod {
 
         public static void DoTick() {
             ShowMessages();
+
+            if (trafficLightsColor != TrafficLightColor.AUTO) {
+                foreach (Prop prop in World.GetNearbyProps(Game.Player.Character.Position, 100.0f)) {
+                    if (trafficSignalHashes.Contains(prop.Model.Hash)) {
+                        Function.Call(Hash.SET_ENTITY_TRAFFICLIGHT_OVERRIDE, prop, (int)trafficLightsColor);
+                    }
+                }
+            }
         }
 
         public static UIText GetMessageHandle(int index) {
@@ -144,16 +167,16 @@ namespace BepMod {
                 color
             );
 
-            if (message != "") {
-                Vector3 camrot = Function.Call<Vector3>(Hash.GET_GAMEPLAY_CAM_ROT, 0);
-                Scaleform scaleform = new Scaleform("PLAYER_NAME_01");
+            // if (message != "") {
+            //     Vector3 camrot = Function.Call<Vector3>(Hash.GET_GAMEPLAY_CAM_ROT, 0);
+            //     Scaleform scaleform = new Scaleform("PLAYER_NAME_01");
 
-                scaleform.CallFunction("SET_PLAYER_NAME", "~s~" + message);
-                scaleform.Render3D(position + new Vector3(0.0f, 0.0f, 2.5f),
-                    rotation: new Vector3(0.0f, (0.0f - camrot.Z), 0.0f), 
-                    scale: new Vector3(5.0f, 3.0f, 1.0f)
-                );
-            }
+            //     scaleform.CallFunction("SET_PLAYER_NAME", "~s~" + message);
+            //     scaleform.Render3D(position + new Vector3(0.0f, 0.0f, 2.5f),
+            //         rotation: new Vector3(0.0f, (0.0f - camrot.Z), 0.0f), 
+            //         scale: new Vector3(5.0f, 3.0f, 1.0f)
+            //     );
+            // }
         }
     }
 }

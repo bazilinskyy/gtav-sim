@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Windows.Forms;
 
 using GTA;
 using GTA.Math;
@@ -22,6 +23,7 @@ namespace BepMod {
         public Weather weather = Weather.ExtraSunny;
 
         bool running = false;
+        //bool braking = false;
 
         public Vehicle vehicle;
         public List<Participant> participants = new List<Participant>();
@@ -29,6 +31,8 @@ namespace BepMod {
 
         public void Main() {
             Log("Scenario.Main()");
+            //KeyDown += DoKeyDown;
+            //KeyUp += DoKeyUp;
         }
 
         public Scenario() { }
@@ -74,12 +78,16 @@ namespace BepMod {
 
             for (int i = 0; i < points.Length; i++) {
                 Vector3 point = points[i];
-                Trigger pointTrigger = AddTrigger(point, name: "Waypoint " + i.ToString());
+                Trigger pointTrigger = AddTrigger(
+                    point, 
+                    name: "Waypoint " + i.ToString()
+                );
                 
                 pointTrigger.TriggerEnter += (sender, index, e) => {
-                    if (debugLevel > 0) {
-                        UI.Notify("Entered waypoint trigger " + index.ToString());
-                    }
+                    // UI.ShowSubtitle("Doe dingen dan!", 2000);
+                    // if (debugLevel > 0) {
+                    //     UI.Notify("Entered waypoint trigger " + index.ToString());
+                    // }
                     if (index < points.Length) {
                         SetWaypoint(Math.Min(points.Length - 1, index + 2));
                     } else {
@@ -87,11 +95,11 @@ namespace BepMod {
                     }
                 };
 
-                pointTrigger.TriggerExit += (sender, index, e) => {
-                    if (debugLevel > 0) {
-                        UI.Notify("Exited waypoint trigger " + index.ToString());
-                    }
-                };
+                // pointTrigger.TriggerExit += (sender, index, e) => {
+                //     if (debugLevel > 0) {
+                //         UI.Notify("Exited waypoint trigger " + index.ToString());
+                //     }
+                // };
             }
 
             PreRun();
@@ -99,6 +107,8 @@ namespace BepMod {
             vehicle = World.CreateVehicle(vehicleHash, startPosition, startHeading);
 
             vehiclePool.Add(vehicle.Handle);
+
+            vehicle.MaxSpeed = 7.5f;
 
             vehicle.PlaceOnGround();
 
@@ -118,6 +128,8 @@ namespace BepMod {
 
             PostRun();
 
+            // Game.FadeScreenIn(2);
+
             UI.Notify("Scenario loaded");
         }
 
@@ -135,9 +147,29 @@ namespace BepMod {
             blips.Add(blip);
         }
 
+
+        //private void DoKeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+        //{
+        //    if (e.KeyCode == System.Windows.Forms.Keys.S) {
+        //        braking = true;
+        //    }
+        //}
+
+        //private void DoKeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
+        //{
+        //    if (e.KeyCode == System.Windows.Forms.Keys.S) {
+        //        braking = false;
+        //    }
+        //}
+
+
         public void DoTick() {
             if (running) {
                 Game.Player.Character.Health = 100;
+
+                //if (braking == false) {
+                //    vehicle.Speed = 7.5f;
+                //}
 
                 DoRemoveVehicles();
                 DoRemovePeds();
@@ -182,26 +214,40 @@ namespace BepMod {
         }
 
         // scenario helpers
-        public Vehicle AddParkedVehicle(float x, float y, float z, float heading, VehicleHash vehicleHash = VehicleHash.Prairie) {
+        public Vehicle AddParkedVehicle(
+            float x, float y, float z, float heading,
+            VehicleHash vehicleHash = VehicleHash.Prairie
+        ) {
             return AddParkedVehicle(new Location(x, y, z, heading), vehicleHash);
         }
 
-        public Vehicle AddParkedVehicle(Location location, VehicleHash vehicleHash = VehicleHash.Prairie) {
+        public Vehicle AddParkedVehicle(
+            Location location, 
+            VehicleHash vehicleHash = VehicleHash.Prairie
+        ) {
             Vehicle vehicle = World.CreateVehicle(vehicleHash, location.position, location.heading);
             vehicle.PlaceOnGround();
             vehiclePool.Add(vehicle.Handle);
             return vehicle;
         }
 
-        public Trigger AddTrigger(Vector3 position, float radius = 10.0f, String name = "") {
+        public Trigger AddTrigger(
+            Vector3 position,
+            float radius = 10.0f,
+            String name = ""
+        ) {
             Trigger trigger = new Trigger(position, radius, name);
             triggers.Add(trigger);
             trigger.index = triggers.IndexOf(trigger);
             return trigger;
         }
 
-        public Participant AddParticipant(Location location, float radius = 5.0f,
-            PedHash pedHash = default(PedHash), VehicleHash vehicleHash = default(VehicleHash), String name = ""
+        public Participant AddParticipant(
+            Location location,
+            float radius = 5.0f,
+            PedHash pedHash = default(PedHash),
+            VehicleHash vehicleHash = default(VehicleHash),
+            String name = ""
         ) {
             Participant participant = new Participant(location, radius, pedHash, vehicleHash, name);
             participants.Add(participant);

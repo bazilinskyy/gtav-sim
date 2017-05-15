@@ -13,7 +13,11 @@ namespace BepMod
     class Trigger : IDisposable {
         public bool debug = false;
 
+        public bool renderDistance = false;
+
         public int index;
+
+        public float distance;
 
         public event TriggerEnterEventHandler TriggerEnter;
         public event TriggerExitEventHandler TriggerExit;
@@ -38,12 +42,23 @@ namespace BepMod
         }
         
         protected virtual void OnTriggerEnter(EventArgs e) {
+            Log("Entered trigger: " + triggerName);
+            if (debugLevel > 0)
+            {
+                UI.Notify("Entered trigger: " + triggerName);
+            }
+
             if (TriggerEnter != null) {
                 TriggerEnter(this, index, e);
             }
         }
 
         protected virtual void OnTriggerExit(EventArgs e) {
+            Log("Exited trigger: " + triggerName);
+            if (debugLevel > 0) {
+                UI.Notify("Exited trigger: " + triggerName);
+            }
+
             if (TriggerExit != null) {
                 TriggerExit(this, index, e);
             }
@@ -52,13 +67,18 @@ namespace BepMod
         public virtual void DoTick() {
             Vector3 playerPos = Game.Player.Character.Position;
 
-            bool inside = triggerPosition.DistanceTo(playerPos) < triggerRadius;
+            distance = triggerPosition.DistanceTo(playerPos);
+            bool inside = distance < triggerRadius;
+
+            if (renderDistance == true) {
+                ShowMessage(triggerName + " distance: " + distance.ToString("0.00"), 3);
+            }
 
             if (debug == true || debugLevel > 1) {
                 RenderCircleOnGround(
                     triggerPosition, 
                     triggerRadius, 
-                    inside ? Color.Green : Color.Red, 
+                    inside ? Color.Green : Color.Red,
                     triggerName
                 );
             }

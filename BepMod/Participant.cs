@@ -19,6 +19,9 @@ namespace BepMod
     class Participant : IDisposable {
         public bool debug = false;
 
+        public float distance;
+        public bool renderDistance = false;
+
         public String participantName;
 
         public float MinSpeed = 0.0f;
@@ -92,12 +95,23 @@ namespace BepMod
         }
 
         protected virtual void OnParticipantInsideRadius(EventArgs e) {
+            Log("Participant inside radius: " + participantName);
+            if (debugLevel > 0) {
+                UI.Notify("Participant inside radius: " + participantName);
+            }
+
             if (ParticipantInsideRadius != null) {
                 ParticipantInsideRadius(this, e);
             }
         }
 
         protected virtual void OnParticipantOutsideRadius(EventArgs e) {
+            Log("Participant outside radius: " + participantName);
+            if (debugLevel > 0)
+            {
+                UI.Notify("Participant outside radius: " + participantName);
+            }
+
             if (ParticipantOutsideRadius != null) {
                 ParticipantOutsideRadius(this, e);
             }
@@ -107,9 +121,14 @@ namespace BepMod
             Vector3 playerPos = Game.Player.Character.Position;
             Vector3 participantPos = Position;
 
-            bool inRange = vehicle.IsInRangeOf(playerPos, triggerRadius);
+            distance = Position.DistanceTo(playerPos);
+            bool inRange = distance < triggerRadius;
 
-            if (vehicle.Speed < MinSpeed) {
+            if (renderDistance == true) {
+                ShowMessage(participantName + " distance: " + distance.ToString("0.00"), 4);
+            }
+
+            if (vehicle != null && vehicle.Speed < MinSpeed) {
                 vehicle.Speed = MinSpeed;
             }
             
