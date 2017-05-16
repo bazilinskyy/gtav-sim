@@ -43,7 +43,7 @@
       <HintPath>scripts\NativeUI.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet">
-      <HintPath>SDK\ScriptHookVDotNet.dll</HintPath>
+      <HintPath>..\..\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EyeTracker.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Trigger.cs" />
@@ -70,7 +71,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <!-- <PostBuildEvent>copy "$(TargetPath)" "..\..\..\..\scripts\$(TargetFileName)"</PostBuildEvent> -->
-    <PostBuildEvent>"$(SolutionDir)\script\copy_to_gta_scripts.bat" "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetPath)" ..\..\..\..\scripts</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>

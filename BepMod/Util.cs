@@ -34,6 +34,8 @@ namespace BepMod {
         public static System.Media.SoundPlayer gpsSoundStraight = new System.Media.SoundPlayer();
         public static string audioBase = ".\\scripts\\GPS\\Audio\\snoop_dogg\\";
 
+        public static EyeTracker eyeTracker = new EyeTracker();
+
         static Util() { }
 
         public static void Log(string message, string name = "general") {

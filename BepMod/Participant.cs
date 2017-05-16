@@ -43,8 +43,6 @@ namespace BepMod
             VehicleHash vehicleHash = default(VehicleHash),
             String name = ""
         ) {
-            Log("Participant.Participant()");
-
             triggerRadius = radius;
             participantName = name;
 

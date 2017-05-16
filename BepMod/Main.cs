@@ -144,18 +144,20 @@ namespace BepMod {
             Game.Player.Character.IsInvincible = true;
 
             // RunScenario(0);
+            eyeTracker.Start();
 
             if (Game.IsScreenFadedOut) {
                 Game.FadeScreenIn(0);
             }
         }
 
-        // ~Main() {
-        //     Log("Main.~Main()");
-        //     // StopScenario();
-        //     // ClearVehiclePool();
-        //     Log("Main.~Main(): shut down complete");
-        // }
+         ~Main() {
+            Log("Main.~Main()");
+            eyeTracker.Stop();
+            StopScenario();
+            ClearVehiclePool();
+            Log("Main.~Main(): shut down complete");
+         }
 
         private void DoKeyDown(object sender, System.Windows.Forms.KeyEventArgs e) {
             if (e.KeyCode == System.Windows.Forms.Keys.B) {
@@ -185,6 +187,14 @@ namespace BepMod {
                 thread.Join(); //Wait for the thread to end
             } else if (e.KeyCode == System.Windows.Forms.Keys.Z) {
                 Mayhem();
+            }
+            else if (e.KeyCode == System.Windows.Forms.Keys.PageUp)
+            {
+                eyeTracker.Stop();
+            }
+            else if (e.KeyCode == System.Windows.Forms.Keys.PageDown)
+            {
+                eyeTracker.Start();
             }
         }
 
@@ -294,9 +304,15 @@ namespace BepMod {
                     RunScenario(0);
                 } catch {}
             }
-
+            
             ShowMessage("Game.Player.LastVehicle.Speed: " + Game.Player.LastVehicle.Speed.ToString("0.000"), 2);
             ShowMessage("GameplayCamera.RelativeHeading: " + GameplayCamera.RelativeHeading.ToString("0.000"), 3);
+
+            if (eyeTracker.lastFrameNumber > 0)
+            {
+                ShowMessage("EyeTracker.lastFrameNumber: " + eyeTracker.lastFrameNumber, 4);
+                ShowMessage("EyeTracker.lastClosestWorldIntersection: " + eyeTracker.lastClosestWorldIntersection.ToString(), 5);
+            }
 
             if (renderPosition) {
                 Vector3 position = Game.Player.Character.Position;

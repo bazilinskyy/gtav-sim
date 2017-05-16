@@ -24,12 +24,12 @@ namespace BepMod
                     new Vector3(-993.0f, -1260.9f, 5.3f)
             };
 
-            //startPosition = points[0]; startHeading = 315.0f;
+            startPosition = points[0]; startHeading = 315.0f;
             //startPosition = points[5]; startHeading = 30.0f;
             //startPosition = new Vector3(-1117.6f, -1532.5f, 3.9f); startHeading = 30.0f;
             //startPosition = points[6]; startHeading = 30.0f;
             //startPosition = points[7]; startHeading = 30.0f;
-            startPosition = points[10]; startHeading = 300.0f;
+            // startPosition = points[10]; startHeading = 300.0f;
         }
 
         public override void PostRun() {
