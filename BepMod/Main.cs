@@ -18,7 +18,7 @@ namespace BepMod {
         private Scenario scenario;
         private List<Scenario> scenarios = new List<Scenario>();
         private int scenariosCount = 0;
-        // private int scenarioIndex = 0;
+        public Entity lastRayHitEntity;
 
         private UIMenu menu;
         private MenuPool menuPool = new MenuPool();
@@ -26,6 +26,8 @@ namespace BepMod {
         private bool renderPosition = false;
         private bool renderRay = false;
         private UIText positionMessage;
+
+        private double degreesPerPixel;
 
         public Main() {
             Log("Main.Main()");
@@ -108,6 +110,7 @@ namespace BepMod {
             menu.OnListChange += (sender, item, index) => {
                 if (item == debugLevelMenuItem) {
                     debugLevel = index;
+                    ClearMessages();
                 }
             };
                 
@@ -131,6 +134,7 @@ namespace BepMod {
 
             KeyDown += DoKeyDown;
             Tick += MainTick;
+            Aborted += MainAborted;
 
             gpsSoundLeft.SoundLocation = audioBase + "LEFT.WAV";
             gpsSoundLeft.Load();
@@ -144,14 +148,23 @@ namespace BepMod {
             Game.Player.Character.IsInvincible = true;
 
             // RunScenario(0);
-            eyeTracker.Start();
+            //eyeTracker.Start();
+
+            double diag = Math.Sqrt(UI.WIDTH * UI.WIDTH + UI.HEIGHT * UI.HEIGHT);
+            degreesPerPixel = GameplayCamera.FieldOfView / diag;
 
             if (Game.IsScreenFadedOut) {
                 Game.FadeScreenIn(0);
             }
         }
 
-         ~Main() {
+        private void MainAborted(object sender, EventArgs e)
+        {
+            Log("ABORTED");
+            eyeTracker.Stop();
+        }
+
+        ~Main() {
             Log("Main.~Main()");
             eyeTracker.Stop();
             StopScenario();
@@ -188,19 +201,17 @@ namespace BepMod {
             } else if (e.KeyCode == System.Windows.Forms.Keys.Z) {
                 Mayhem();
             }
-            else if (e.KeyCode == System.Windows.Forms.Keys.PageUp)
+            else if (e.KeyCode == System.Windows.Forms.Keys.L)
             {
                 eyeTracker.Stop();
             }
-            else if (e.KeyCode == System.Windows.Forms.Keys.PageDown)
+            else if (e.KeyCode == System.Windows.Forms.Keys.O)
             {
                 eyeTracker.Start();
             }
         }
 
         public void Mayhem() {
-            UI.Notify("Succes");
-
             Vector3 p = Game.Player.Character.Position;
             float h = Game.Player.Character.Heading;
             
@@ -208,54 +219,12 @@ namespace BepMod {
             v1.Speed = 10f;
 
             vehiclePool.Add(v1.Handle);
-
-            //Participant ph = AddParticipant(
-            //    new Location(startPosition.X, startPosition.Y, startPosition.Z + 50f, startHeading),
-            //    pedHash: PedHash.Brad,
-            //    vehicleHash: VehicleHash.Maverick
-            //);
-            //// ph.vehicle.CurrentRPM = 100f;
-            //ph.vehicle.Speed = 5f;
-            //ph.ped.Task.FollowToOffsetFromEntity(
-            //    Game.Player.Character,
-            //    new Vector3(-20f, -20f, 40f),
-            //    100000,
-            //    100000
-            //);
-
-            //Participant ph2 = AddParticipant(
-            //    new Location(startPosition.X, startPosition.Y - 10f, startPosition.Z + 50f, startHeading),
-            //    pedHash: PedHash.Brad,
-            //    vehicleHash: VehicleHash.Maverick
-            //);
-            //ph2.vehicle.Speed = 5f;
-            //ph2.ped.Task.FollowToOffsetFromEntity(
-            //    Game.Player.Character,
-            //    new Vector3(-20f, -20f, 40f),
-            //    100000,
-            //    100000
-            //);
-
-
-            //Participant ph3 = AddParticipant(
-            //    new Location(startPosition.X + 10f, startPosition.Y - 10f, startPosition.Z + 60f, startHeading),
-            //    pedHash: PedHash.Brad,
-            //    vehicleHash: VehicleHash.Maverick
-            //);
-            //ph3.vehicle.Speed = 5f;
-            //ph3.ped.Task.FollowToOffsetFromEntity(
-            //    Game.Player.Character,
-            //    new Vector3(-20f, -20f, 40f),
-            //    100000,
-            //    100000
-            //);
         }
 
         public void Menu_OnItemSelect(UIMenu sender, UIMenuItem selectedItem, int index) {
             Log("Menu_OnItemSelect (" + index + ") " + selectedItem.Text);
 
             if (index == scenariosCount) {
-                //scenarioIndex = index;
                 StopScenario();
             } else if (index == (scenariosCount + 4)) {
                 ClearVehiclePool();
@@ -277,13 +246,9 @@ namespace BepMod {
 
         private void RunScenario(int index) {
             Log("Main.RunScenario()");
-            // Game.FadeScreenOut(100);
-            // Wait(100);
             StopScenario();
             scenario = scenarios[index];
             scenario.Run();
-            // Wait(100);
-            // Game.FadeScreenIn(100);
         }
 
         private void Menu_OnCheckboxChange(UIMenu sender, UIMenuCheckboxItem checkboxItem, bool Checked) {
@@ -304,15 +269,8 @@ namespace BepMod {
                     RunScenario(0);
                 } catch {}
             }
-            
-            ShowMessage("Game.Player.LastVehicle.Speed: " + Game.Player.LastVehicle.Speed.ToString("0.000"), 2);
-            ShowMessage("GameplayCamera.RelativeHeading: " + GameplayCamera.RelativeHeading.ToString("0.000"), 3);
 
-            if (eyeTracker.lastFrameNumber > 0)
-            {
-                ShowMessage("EyeTracker.lastFrameNumber: " + eyeTracker.lastFrameNumber, 4);
-                ShowMessage("EyeTracker.lastClosestWorldIntersection: " + eyeTracker.lastClosestWorldIntersection.ToString(), 5);
-            }
+            eyeTracker.DoTick();
 
             if (renderPosition) {
                 Vector3 position = Game.Player.Character.Position;
@@ -332,34 +290,82 @@ namespace BepMod {
                 positionMessage.Draw();
             }
 
-            if (renderRay) {
-                RaycastResult ray = World.RaycastCapsule(GameplayCamera.Position,
-                    GameplayCamera.Position + RotToDir(GameplayCamera.Rotation) * 1000.0f,
-                    20.0f,
-                    IntersectOptions.Everything);
+            EyeTracker.WorldIntersection wi = eyeTracker.lastClosestWorldIntersection;
+            ShowMessage(wi.ToString(), 15);
 
-                if (ray.HitEntity != null) {
-                    Ped ped = new Ped(ray.HitEntity.Handle);
+            Vector3 rc = wi.ObjectPoint;
 
-                    int uiWidth = (int) System.Math.Round((double) UI.WIDTH);
-                    int uiHeight = (int) System.Math.Round((double) UI.HEIGHT);
-                    int containerWidth = 400;
-                    int containerHeight = 110;
+            Vector2 rcp = new Vector2(rc.X, rc.Y);
 
-                    UIContainer container = new UIContainer(
-                        new Point(uiWidth - containerWidth, uiHeight - containerHeight),
-                        new Size(new Point(containerWidth, containerHeight))
+            Vector2 p = new Vector2(
+                rcp.X / UI.WIDTH, 
+                rcp.Y / UI.HEIGHT
+            ) * 2 - new Vector2(1, 1);
+
+            Vector3 camPoint;
+            Vector3 farPoint;
+            Gta5EyeTracking.Geometry.ScreenRelToWorld(p, out camPoint, out farPoint);            
+            
+            Vector3 direction = farPoint - camPoint;
+
+            RaycastResult ray = World.Raycast(
+                source: camPoint,
+                direction: direction,
+                maxDistance: 200f,
+                options: IntersectOptions.Everything,
+                ignoreEntity: Game.Player.Character
+            );
+
+            lastRayHitEntity = ray.HitEntity;
+
+            if (debugLevel >= 1)
+            {
+                ShowMessage("Frame: " + eyeTracker.lastFrameNumber, 2);
+                ShowMessage("DitHitEntity: " + ray.DitHitEntity.ToString(), 3);
+                ShowMessage("DitHitAnything: " + ray.DitHitAnything.ToString(), 4);
+                ShowMessage("HitCoords: " + ray.HitCoords.ToString(), 5);
+                ShowMessage("SurfaceNormal: " + ray.SurfaceNormal.ToString(), 6);
+
+                if (debugLevel > 1)
+                {
+                    UIRectangle et = new UIRectangle(
+                        new Point((int)rcp.X, (int)rcp.Y),
+                        new Size(new Point(15, 15)),
+                        Color.FromArgb(127, Color.Yellow)
                     );
+                    et.Draw();
 
-                    container.Items.Add(new UIText("Handle: " + ped.Handle.ToString(), new Point(20, 12), 0.3f, Color.Yellow));
-                    container.Items.Add(new UIText("Hash: " + ped.Model.GetHashCode().ToString(), new Point(20, 24), 0.3f, Color.Yellow));
-                    container.Items.Add(new UIText("Heading: " + ped.Heading.ToString(), new Point(20, 36), 0.3f, Color.Yellow));
-                    container.Items.Add(new UIText("Rotation: " + ped.Rotation.ToString(), new Point(20, 48), 0.3f, Color.Yellow));
-                    container.Items.Add(new UIText("Position: " + ped.Position.ToString(), new Point(20, 60), 0.3f, Color.Yellow));
-                    container.Items.Add(new UIText("Velocity: " + ped.Velocity.ToString(), new Point(20, 72), 0.3f, Color.Yellow));
-                    container.Items.Add(new UIText("Dimentions: " + ped.Model.GetDimensions().ToString(), new Point(20, 84), 0.3f, Color.Yellow));
+                    World.DrawMarker(
+                        MarkerType.DebugSphere,
+                        ray.HitCoords,
+                        Vector3.Zero,
+                        Vector3.Zero,
+                        new Vector3(1, 1, 1),
+                        Color.FromArgb(127, Color.White)
+                    );
+                }
 
-                    container.Draw();
+                if (ray.HitEntity != null)
+                {
+                    ShowMessage("HitEntity: " + ray.HitEntity.Handle.ToString(), 8);
+
+                    if (scenario != null)
+                    {
+                        Participant hitParticipant = scenario.FindParticipantByEntity(ray.HitEntity);
+
+                        if (hitParticipant != null)
+                        {
+                            ShowMessage("HitParticipant: " + hitParticipant.participantName, 9);
+                        }
+                        else
+                        {
+                            ShowMessage("HitParticipant: -", 9);
+                        }
+                    }
+                }
+                else
+                {
+                    ShowMessage("HitEntity: -", 8);
                 }
             }
 

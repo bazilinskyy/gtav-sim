@@ -13,11 +13,11 @@ namespace BepMod {
 
 
     static class Util {
-        public static int debugLevel = 3;
+        public static int debugLevel = 2;
 
-        public static String[] messages = new String[20];
+        public static String[] messages = new String[30];
 
-        public static UIText[] messageHandles = new UIText[20];
+        public static UIText[] messageHandles = new UIText[30];
 
         public static HashSet<int> vehiclePool = new HashSet<int>();
         public static HashSet<int> pedPool = new HashSet<int>();
@@ -62,14 +62,24 @@ namespace BepMod {
         public static UIText GetMessageHandle(int index) {
             if (messageHandles[index] == null) {
                 messageHandles[index] = new UIText("",
-                    new Point((int) System.Math.Round((double) UI.WIDTH / 2), 60 + 20*index),
-                    .5f,
+                    new Point(10, 10 + 30*index),
+                    .75f,
                     Color.Yellow,
                     GTA.Font.ChaletComprimeCologne,
+                    false,
+                    true,
                     true
                 );
             }
             return messageHandles[index];
+        }
+
+        public static void ClearMessages()
+        {
+            for (int i = 0; i < messages.Length; i++)
+            {
+                ShowMessage("", i);
+            }
         }
 
         public static void ShowMessage(string message = null, int index = 0) {
@@ -140,23 +150,21 @@ namespace BepMod {
         }
 
         public static Vector3 RotToDir(Vector3 Rot) {
-            double z = Rot.Z;
-            double retz = z * 0.01745329;
-            double x = Rot.X;
-            double retx = x * 0.01745329;
-            double absx = System.Math.Abs(System.Math.Cos(retx));
+            double retz = Rot.Z * 0.01745329;
+            double retx = Rot.X * 0.01745329;
+            double absx = Math.Abs(Math.Cos(retx));
+
             return new Vector3(
-                (float)(-System.Math.Sin(retz) * absx),
-                (float)(System.Math.Cos(retz) * absx),
-                (float)(System.Math.Sin(retx))
+                (float)(-Math.Sin(retz) * absx),
+                (float)( Math.Cos(retz) * absx),
+                (float)( Math.Sin(retx))
             );
         }
 
         public static void RenderCircleOnGround(
             Vector3 position, 
             float radius, 
-            Color color,
-            String message = ""
+            Color color
         ) {
             position.Z = World.GetGroundHeight(position) + 0.5f;
 
@@ -168,17 +176,6 @@ namespace BepMod {
                 new Vector3(1, 1, 1) * radius * 2,
                 color
             );
-
-            // if (message != "") {
-            //     Vector3 camrot = Function.Call<Vector3>(Hash.GET_GAMEPLAY_CAM_ROT, 0);
-            //     Scaleform scaleform = new Scaleform("PLAYER_NAME_01");
-
-            //     scaleform.CallFunction("SET_PLAYER_NAME", "~s~" + message);
-            //     scaleform.Render3D(position + new Vector3(0.0f, 0.0f, 2.5f),
-            //         rotation: new Vector3(0.0f, (0.0f - camrot.Z), 0.0f), 
-            //         scale: new Vector3(5.0f, 3.0f, 1.0f)
-            //     );
-            // }
         }
     }
 }

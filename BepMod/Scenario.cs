@@ -23,7 +23,6 @@ namespace BepMod {
         public Weather weather = Weather.ExtraSunny;
 
         bool running = false;
-        //bool braking = false;
 
         public Vehicle vehicle;
         public List<Participant> participants = new List<Participant>();
@@ -31,8 +30,6 @@ namespace BepMod {
 
         public void Main() {
             Log("Scenario.Main()");
-            //KeyDown += DoKeyDown;
-            //KeyUp += DoKeyUp;
         }
 
         public Scenario() { }
@@ -84,22 +81,12 @@ namespace BepMod {
                 );
                 
                 pointTrigger.TriggerEnter += (sender, index, e) => {
-                    // UI.ShowSubtitle("Doe dingen dan!", 2000);
-                    // if (debugLevel > 0) {
-                    //     UI.Notify("Entered waypoint trigger " + index.ToString());
-                    // }
                     if (index < points.Length) {
                         SetWaypoint(Math.Min(points.Length - 1, index + 2));
                     } else {
                         ClearWaypoint();
                     }
                 };
-
-                // pointTrigger.TriggerExit += (sender, index, e) => {
-                //     if (debugLevel > 0) {
-                //         UI.Notify("Exited waypoint trigger " + index.ToString());
-                //     }
-                // };
             }
 
             PreRun();
@@ -127,8 +114,6 @@ namespace BepMod {
             World.Weather = weather;
 
             PostRun();
-
-            // Game.FadeScreenIn(2);
 
             UI.Notify("Scenario loaded");
         }
@@ -166,10 +151,6 @@ namespace BepMod {
         public void DoTick() {
             if (running) {
                 Game.Player.Character.Health = 100;
-
-                //if (braking == false) {
-                //    vehicle.Speed = 7.5f;
-                //}
 
                 DoRemoveVehicles();
                 DoRemovePeds();
@@ -252,6 +233,13 @@ namespace BepMod {
             Participant participant = new Participant(location, radius, pedHash, vehicleHash, name);
             participants.Add(participant);
             return participant;
+        }
+
+        public Participant FindParticipantByEntity(Entity entity)
+        {
+            int handle = entity.Handle;
+            return participants.Find(
+                x => x.pedHandle == handle || x.vehicleHandle == handle);
         }
     }
 }

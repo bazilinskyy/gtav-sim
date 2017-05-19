@@ -30,8 +30,10 @@ namespace BepMod
         public event ParticipantOutsideRadiusEventHandler ParticipantOutsideRadius;
 
         public Vehicle vehicle;
-
         public Ped ped;
+
+        public int vehicleHandle = -1;
+        public int pedHandle = -1;
 
         public float triggerRadius;
         public bool triggeredInside = false;
@@ -55,6 +57,8 @@ namespace BepMod
                 vehicle.SetDoorBreakable(VehicleDoor.FrontLeftDoor, false);
                 vehicle.SetDoorBreakable(VehicleDoor.FrontRightDoor, false);
 
+                vehicleHandle = vehicle.Handle;
+
                 vehiclePool.Add(vehicle.Handle);
             }
 
@@ -67,6 +71,8 @@ namespace BepMod
                 if (vehicle != null) {
                     ped.SetIntoVehicle(vehicle, VehicleSeat.Driver);
                 }
+
+                pedHandle = ped.Handle;
 
                 pedPool.Add(ped.Handle);
             }
@@ -130,12 +136,11 @@ namespace BepMod
                 vehicle.Speed = MinSpeed;
             }
             
-            if (debug == true || debugLevel > 1) {
+            if (debug == true || debugLevel > 2) {
                 RenderCircleOnGround(
                     Position, 
                     triggerRadius, 
-                    inRange ? Color.Green : Color.Red, 
-                    participantName
+                    inRange ? Color.Green : Color.Red
                 );
             }
             

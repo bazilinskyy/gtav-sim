@@ -74,12 +74,11 @@ namespace BepMod
                 ShowMessage(triggerName + " distance: " + distance.ToString("0.00"), 3);
             }
 
-            if (debug == true || debugLevel > 1) {
+            if (debug == true || debugLevel > 2) {
                 RenderCircleOnGround(
                     triggerPosition, 
                     triggerRadius, 
-                    inside ? Color.Green : Color.Red,
-                    triggerName
+                    inside ? Color.Green : Color.Red
                 );
             }
 

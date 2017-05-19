@@ -22,8 +22,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -45,6 +46,12 @@
     <Reference Include="ScriptHookVDotNet">
       <HintPath>..\..\ScriptHookVDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>..\external\SharpDX-SDK-3.1.0\Bin\Desktop\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>..\external\SharpDX-SDK-3.1.0\Bin\Desktop\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -58,9 +65,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CameraHelper.cs" />
     <Compile Include="EyeTracker.cs" />
+    <Compile Include="Geometry.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Main.cs" />
+    <Compile Include="Mathf.cs" />
+    <Compile Include="ScriptHookExtensions.cs" />
+    <Compile Include="SigScan.cs" />
     <Compile Include="Trigger.cs" />
     <Compile Include="Participant.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

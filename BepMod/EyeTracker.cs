@@ -16,31 +16,60 @@ namespace BepMod
 {
     class EyeTracker
     {
+        public string status = "";
+
+        public void DoTick()
+        {
+            ShowMessage(status, 1);
+        }
+
         public EyeTrackerPacket lastPacket = new EyeTrackerPacket();
-        public UInt32 lastFrameNumber = 0;
-        public WorldIntersection lastClosestWorldIntersection = new WorldIntersection();
-        
+        public UInt32 lastFrameNumber;
+        public WorldIntersection lastClosestWorldIntersection = new WorldIntersection(
+            new Vector3(0, 0, 0),
+            new Vector3(UI.WIDTH / 2, UI.HEIGHT / 2, 0),
+            "No recorded intersection yet"
+        );
+
         public int listenPort = 5001;
         public bool listening = false;
         public Thread listeningThread;
+
+        public int GetOpenUdpPort()
+        {
+            var startingAtPort = 5001;
+            var maxNumberOfPortsToCheck = 500;
+            var range = Enumerable.Range(startingAtPort, maxNumberOfPortsToCheck);
+            var portsInUse =
+                from p in range
+                join used in System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners()
+            on p equals used.Port
+                select p;
+
+            return range.Except(portsInUse).FirstOrDefault();
+        }
 
         UdpClient socket;
 
         ~EyeTracker()
         {
             Log("~EyeTracker()");
+            Stop();
         }
 
         public void Start()
         {
             Log("EyeTracker.Start()");
-            UI.Notify("EyeTracker.Start()");
+            status = "EyeTracker.Start()";
+
             if (listening == false)
             {
                 Stop();
 
+                this.listenPort = GetOpenUdpPort();
+
                 listening = true;
-                listeningThread = new Thread(PacketListener);
+                listeningThread = new Thread(new ThreadStart(PacketListener));
                 listeningThread.IsBackground = true;
                 listeningThread.Start();
             }
@@ -49,7 +78,8 @@ namespace BepMod
         public void Stop()
         {
             Log("EyeTracker.Stop()");
-            UI.Notify("EyeTracker.Stop()");
+            status = "EyeTracker.Stop()";
+
             if (listening == true)
             {
                 listening = false;
@@ -71,22 +101,22 @@ namespace BepMod
             {
                 socket = new UdpClient(listenPort);
             }
-            catch (SocketException e) {
+            catch (SocketException e)
+            {
                 Log("EyeTracker listener not initialized correctly: " + e.ToString());
-                UI.Notify("EyeTracker listen failed");
+                status = "EyeTracker listen failed";
             }
 
             if (socket != null)
             {
                 IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-                UI.Notify("EyeTracker listening on "+ listenPort.ToString());
+                status = "EyeTracker listening on " + listenPort.ToString();
 
-                try
+                while (listening)
                 {
-                    while (listening)
+                    try
                     {
                         byte[] data = socket.Receive(ref groupEP);
-                        Log("Packet: " + BitConverter.ToString(data));
 
                         EyeTrackerPacket res = new EyeTrackerPacket(data);
 
@@ -101,14 +131,13 @@ namespace BepMod
                             else if (subPacket.Id == 64)
                             {
                                 lastClosestWorldIntersection = subPacket.GetWorldIntersection();
-                                Log("lastClosestWorldIntersection: " + lastClosestWorldIntersection.ToString());
                             }
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    Log("EyeTracker exception: " + e.ToString());
+                    catch (Exception e)
+                    {
+                        Log("EyeTracker exception: " + e.ToString());
+                    }
                 }
             }
 
@@ -135,9 +164,9 @@ namespace BepMod
 
         public struct WorldIntersection
         {
-            Vector3 WorldPoint;
-            Vector3 ObjectPoint;
-            string Name;
+            public Vector3 WorldPoint;
+            public Vector3 ObjectPoint;
+            public string Name;
 
             public WorldIntersection(Vector3 WorldPoint, Vector3 ObjectPoint, string Name)
             {
@@ -149,9 +178,8 @@ namespace BepMod
             override public string ToString()
             {
                 return String.Format(
-                    "WorldIntersection ({0}): [World {1}] [Object {2}]",
+                    "WI ({0}): {1}",
                     Name,
-                    WorldPoint.ToString(),
                     ObjectPoint.ToString()
                 );
             }
