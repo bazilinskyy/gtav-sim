@@ -1,13 +1,16 @@
-﻿using static BepMod.Util;
-using GTA;
+﻿using GTA;
 using GTA.Math;
 using GTA.Native;
+
+using static BepMod.Util;
 
 namespace BepMod
 {
     class Scenario1 : Scenario {
         public Scenario1() {
-            points = new Vector3[] {
+            Name = "SCENARIO_1";
+
+            Points = new Vector3[] {
                 new Vector3(-1054.6f, -1680.5f, 4.1f),
                     new Vector3(-1040.4f, -1663.6f, 4.1f),
                     new Vector3(-1019.4f, -1641.4f, 4.1f),
@@ -24,13 +27,13 @@ namespace BepMod
                     new Vector3(-993.0f, -1260.9f, 5.3f)
             };
 
-            startPosition = points[0]; startHeading = 315.0f;
-            //startPosition = points[2]; startHeading = 270.0f;
-            //startPosition = points[5]; startHeading = 30.0f;
-            //startPosition = new Vector3(-1117.6f, -1532.5f, 3.9f); startHeading = 30.0f;
-            //startPosition = points[6]; startHeading = 30.0f;
-            //startPosition = points[7]; startHeading = 30.0f;
-            // startPosition = points[10]; startHeading = 300.0f;
+            StartPosition = Points[0]; StartHeading = 315.0f;
+            //StartPosition = Points[2]; StartHeading = 270.0f;
+            //StartPosition = Points[5]; StartHeading = 30.0f;
+            //StartPosition = new Vector3(-1117.6f, -1532.5f, 3.9f); StartHeading = 30.0f;
+            //StartPosition = Points[6]; StartHeading = 30.0f;
+            //StartPosition = Points[7]; StartHeading = 30.0f;
+            //StartPosition = Points[10]; StartHeading = 300.0f;
         }
 
         public override void PostRun() {
@@ -41,7 +44,7 @@ namespace BepMod
                 heading: 210.0f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Actor 1"
+                name: "1"
             );
 
             Actor p2 = AddActor(
@@ -50,7 +53,7 @@ namespace BepMod
                 radius: 7.5f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Actor 2"
+                name: "2"
             );
 
             Actor p3 = AddActor(
@@ -58,7 +61,7 @@ namespace BepMod
                 heading: 112.0f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Actor 3"
+                name: "3"
             );
 
             Actor p4 = AddActor(
@@ -66,14 +69,14 @@ namespace BepMod
                 heading: 120.2f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Actor 4"
+                name: "4"
             );
 
             Actor p5 = AddActor(
                 position: new Vector3(-1091.9f, -1557.8f, 3.9f),
                 heading: 23.0f,
                 pedHash: PedHash.Brad,
-                name: "Actor 5"
+                name: "5"
             );
 
             Actor p61 = AddActor(
@@ -81,22 +84,22 @@ namespace BepMod
                 heading: 127.5f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Actor 6.1"
+                name: "6_1"
             );
             Actor p62 = AddActor(
                 position: new Vector3(-1181.5f, -1449.4f, 3.9f),
                 heading: 210.7f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Actor 6.2"
+                name: "6_2"
             );
 
 
             // Event 1
             Trigger t1 = AddTrigger(
-                points[1], 
+                Points[1], 
                 radius: 7.5f, 
-                name: "Trigger 1"
+                name: "1"
             );
 
             t1.TriggerEnter += (sender, index, e) => {
@@ -106,7 +109,7 @@ namespace BepMod
                 p1.vehicle.Speed = 25.0f;
                 p1.ped.Task.DriveTo(
                     p1.vehicle,
-                    points[points.Length - 1],
+                    Points[Points.Length - 1],
                     5.0f,
                     25.0f,
                     (int)DrivingStyle.AvoidTrafficExtremely
@@ -126,14 +129,14 @@ namespace BepMod
             Trigger t2 = AddTrigger(
                 new Vector3(-1014.4f, -1633.5f, 4.2f), 
                 radius: 7.5f, 
-                name: "Trigger 2"
+                name: "2"
             );
 
             t2.TriggerEnter += (sender, index, e) => {
                 p2.vehicle.Speed = 4.0f;
                 p2.ped.Task.DriveTo(
                     p2.vehicle,
-                    points[points.Length - 1],
+                    Points[Points.Length - 1],
                     5.0f,
                     25.0f,
                     (int)DrivingStyle.Rushed
@@ -144,9 +147,9 @@ namespace BepMod
 
             // Event 3
             Trigger t3 = AddTrigger(
-                points[3], 
+                Points[3], 
                 radius: 7.5f, 
-                name: "Trigger 3"
+                name: "3"
             );
 
             t3.TriggerEnter += (sender, index, e) => {
@@ -156,7 +159,7 @@ namespace BepMod
                 p3.vehicle.Speed = 15.0f;
                 p3.ped.Task.DriveTo(
                     p3.vehicle,
-                    points[0],
+                    Points[0],
                     5.0f,
                     20.0f,
                     (int)DrivingStyle.Rushed
@@ -164,7 +167,7 @@ namespace BepMod
 
                 p4.ped.Task.DriveTo(
                     p4.vehicle,
-                    points[0],
+                    Points[0],
                     radius: 5.0f,
                     speed: 7.5f,
                     drivingstyle: (int)DrivingStyle.Rushed
@@ -175,9 +178,9 @@ namespace BepMod
 
             // Event 4
             Trigger t4 = AddTrigger(
-                points[4],
+                Points[4],
                 radius: 7.5f,
-                name: "Trigger 4"
+                name: "4"
             );
 
             t4.TriggerEnter += (sender, index, e) => {
@@ -186,7 +189,7 @@ namespace BepMod
 
                 p4.ped.Task.DriveTo(
                     p4.vehicle,
-                    points[0],
+                    Points[0],
                     radius: 5.0f,
                     speed: p4.distance / 2,
                     drivingstyle: (int)DrivingStyle.Rushed
@@ -199,13 +202,13 @@ namespace BepMod
             Trigger t51 = AddTrigger(
                 new Vector3(-1069.1f, -1530.1f, 4.5f),
                 radius: 7.5f,
-                name: "Trigger 5.1"
+                name: "5_1"
             );
 
             Trigger t52 = AddTrigger(
-                points[5],
+                Points[5],
                 radius: 7.5f,
-                name: "Trigger 5.2"
+                name: "5_2"
             );
 
             t51.TriggerEnter += (sender, index, e) => {
@@ -228,13 +231,13 @@ namespace BepMod
             Trigger t61 = AddTrigger(
                 new Vector3(-1117.6f, -1532.5f, 3.9f),
                 radius: 7.5f,
-                name: "Trigger 6.1"
+                name: "6_1"
             );
 
             Trigger t62 = AddTrigger(
-                points[6],
+                Points[6],
                 radius: 7.5f,
-                name: "Trigger 6.2"
+                name: "6_2"
             );
 
             t61.TriggerEnter += (sender, index, e) => {
@@ -267,7 +270,7 @@ namespace BepMod
 
                 p62.ped.Task.DriveTo(
                     p62.vehicle,
-                    target: points[points.Length - 1],
+                    target: Points[Points.Length - 1],
                     radius: 1.0f,
                     speed: 7.5f,
                     drivingstyle: (int)DrivingStyle.IgnoreLights
@@ -294,9 +297,9 @@ namespace BepMod
             );
 
             Trigger t71 = AddTrigger(
-                points[7],
+                Points[7],
                 radius: 7.5f,
-                name: "Trigger 7.1"
+                name: "7_1"
             );
 
 
@@ -312,7 +315,7 @@ namespace BepMod
             t71.TriggerEnter += (sender, index, e) => {
                 p72.ped.Task.DriveTo(
                     p72.vehicle,
-                    target: points[5],
+                    target: Points[5],
                     radius: 5.0f,
                     speed: 5.0f
                 );
@@ -330,9 +333,9 @@ namespace BepMod
             );
 
             Trigger t81 = AddTrigger(
-                points[8],
+                Points[8],
                 radius: 7.5f,
-                name: "Trigger 8.1"
+                name: "8_1"
             );
 
             t81.TriggerEnter += (sender, index, e) => {
@@ -342,7 +345,7 @@ namespace BepMod
                 p81.vehicle.Speed = 5.0f;
                 p81.ped.Task.DriveTo(
                     p81.vehicle,
-                    target: points[points.Length - 1],
+                    target: Points[Points.Length - 1],
                     radius: 1.0f,
                     speed: 10.0f,
                     drivingstyle: (int)DrivingStyle.IgnoreLights
@@ -355,9 +358,9 @@ namespace BepMod
 
             // Event 10
             Trigger t101 = AddTrigger(
-                points[10],
+                Points[10],
                 radius: 7.5f,
-                name: "Trigger 10.1"
+                name: "10_1"
             );
 
             t101.TriggerEnter += (sender, index, e) => {
@@ -371,9 +374,9 @@ namespace BepMod
 
             // Event 11
             Trigger t111 = AddTrigger(
-                points[11],
+                Points[11],
                 radius: 7.5f,
-                name: "Trigger 11.1"
+                name: "11_1"
             );
 
             t111.TriggerEnter += (sender, index, e) => {
@@ -382,9 +385,6 @@ namespace BepMod
 
                 trafficLightsColor = TrafficLightColor.RED;
             };
-
-
-            //new Vector3(-1064.8f, -1339.7f, 4.9f, 345.7f)
 
 
 

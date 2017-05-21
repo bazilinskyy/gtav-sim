@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 using GTA;
 using GTA.Math;
@@ -20,10 +19,18 @@ namespace BepMod
 
         public void DoTick()
         {
-            ShowMessage(status, 1);
+            //if (!string.IsNullOrEmpty(status))
+            //{
+            //    Log("SmartEye: " + status);
+            //    if (debugLevel > 0)
+            //    {
+            //        ShowMessage(status);
+            //    }
+            //    status = "";
+            //}
         }
 
-        public SmartEyePacket lastPacket = new SmartEyePacket();
+        public Packet lastPacket = new Packet();
         public UInt32 lastFrameNumber;
         public WorldIntersection lastClosestWorldIntersection = new WorldIntersection(
             new Vector3(0, 0, 0),
@@ -94,7 +101,6 @@ namespace BepMod
 
         public void PacketListener()
         {
-            Log("PacketListener()");
             socket = null;
 
             try
@@ -118,11 +124,11 @@ namespace BepMod
                     {
                         byte[] data = socket.Receive(ref groupEP);
 
-                        SmartEyePacket res = new SmartEyePacket(data);
+                        Packet res = new Packet(data);
 
                         lastPacket = res;
 
-                        foreach (SmartEyeSubPacket subPacket in res.SubPackets)
+                        foreach (SubPacket subPacket in res.SubPackets)
                         {
                             if (subPacket.Id == 1)
                             {
@@ -178,20 +184,19 @@ namespace BepMod
             override public string ToString()
             {
                 return String.Format(
-                    "WI ({0}): {1}",
-                    Name,
+                    "WorldIntersection {0}",
                     ObjectPoint.ToString()
                 );
             }
         }
 
-        public struct SmartEyeSubPacket
+        public struct SubPacket
         {
             public UInt16 Id;
             public UInt16 Length;
             public byte[] Data;
 
-            public SmartEyeSubPacket(byte[] value, int startIndex)
+            public SubPacket(byte[] value, int startIndex)
             {
                 Id = BitConverter.ToUInt16(GetData(value, startIndex, 2), 0);
                 Length = BitConverter.ToUInt16(GetData(value, startIndex + 2, 2), 0);
@@ -221,6 +226,8 @@ namespace BepMod
 
             public WorldIntersection GetWorldIntersection()
             {
+                //UInt16 size = BitConverter.ToUInt16(GetData(Data, 50, 2), 0);
+
                 return new WorldIntersection(
                     new Vector3(
                         (float)BitConverter.ToDouble(GetData(Data, 2, 8), 0),
@@ -232,39 +239,40 @@ namespace BepMod
                         (float)BitConverter.ToDouble(GetData(Data, 34, 8), 0),
                         (float)BitConverter.ToDouble(GetData(Data, 42, 8), 0)
                     ),
-                    Encoding.ASCII.GetString(Data, 50, Length - 50)
+                    ""
+                    //Encoding.ASCII.GetString(Data, 50, size)
                 );
             }
         }
 
-        public struct SmartEyePacket
+        public struct Packet
         {
             public string Id;
             public UInt16 Type;
             public UInt16 Length;
 
-            public List<SmartEyeSubPacket> SubPackets;
+            public List<SubPacket> SubPackets;
 
-            public SmartEyePacket(byte[] value)
+            public Packet(byte[] value)
             {
                 Id = Encoding.ASCII.GetString(value, 0, 4);
                 Type = BitConverter.ToUInt16(GetData(value, 4, 2), 0);
                 Length = BitConverter.ToUInt16(GetData(value, 6, 2), 0);
-                SubPackets = new List<SmartEyeSubPacket>();
+                SubPackets = new List<SubPacket>();
 
                 int pos = 8;
 
                 while (pos < Length)
                 {
-                    SmartEyeSubPacket subPacket = new SmartEyeSubPacket(value, pos);
+                    SubPacket subPacket = new SubPacket(value, pos);
                     SubPackets.Add(subPacket);
                     pos += (4 + subPacket.Length);
                 }
             }
 
-            public SmartEyeSubPacket GetSubPacket(UInt16 type)
+            public SubPacket GetSubPacket(UInt16 type)
             {
-                foreach (SmartEyeSubPacket subPacket in SubPackets)
+                foreach (SubPacket subPacket in SubPackets)
                 {
                     if (subPacket.Id == type)
                     {
@@ -272,7 +280,7 @@ namespace BepMod
                     }
                 }
 
-                return new SmartEyeSubPacket();
+                return new SubPacket();
             }
         }
     }

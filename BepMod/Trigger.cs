@@ -11,10 +11,6 @@ namespace BepMod
     public delegate void TriggerExitEventHandler(object sender, int index, EventArgs e);
 
     class Trigger : IDisposable {
-        public bool debug = false;
-
-        public bool renderDistance = false;
-
         public int index;
 
         public float distance;
@@ -26,6 +22,8 @@ namespace BepMod
         public float triggerRadius;
         public String triggerName;
         public bool triggeredInside = false;
+
+        public string NameFormat = "TRIGGER_{0}";
 
         public Trigger(
             Vector3 position,
@@ -40,12 +38,17 @@ namespace BepMod
         public void Dispose() {
             Log("Trigger.Dispose()");
         }
-        
+
+        override public string ToString()
+        {
+            return String.Format(NameFormat, triggerName);
+        }
+
         protected virtual void OnTriggerEnter(EventArgs e) {
             Log("Entered trigger: " + triggerName);
             if (debugLevel > 0)
             {
-                UI.Notify("Entered trigger: " + triggerName);
+                ShowMessage("Entered trigger: " + triggerName);
             }
 
             if (TriggerEnter != null) {
@@ -56,7 +59,7 @@ namespace BepMod
         protected virtual void OnTriggerExit(EventArgs e) {
             Log("Exited trigger: " + triggerName);
             if (debugLevel > 0) {
-                UI.Notify("Exited trigger: " + triggerName);
+                ShowMessage("Exited trigger: " + triggerName);
             }
 
             if (TriggerExit != null) {
@@ -70,11 +73,7 @@ namespace BepMod
             distance = triggerPosition.DistanceTo(playerPos);
             bool inside = distance < triggerRadius;
 
-            if (renderDistance == true) {
-                ShowMessage(triggerName + " distance: " + distance.ToString("0.00"), 3);
-            }
-
-            if (debug == true || debugLevel > 2) {
+            if (debugLevel > 2) {
                 RenderCircleOnGround(
                     triggerPosition, 
                     triggerRadius, 

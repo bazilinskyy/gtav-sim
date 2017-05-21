@@ -8,25 +8,31 @@ using GTA;
 using GTA.Math;
 
 using GTA.Native;
+using System.Diagnostics;
 
 namespace BepMod {
-    class Scenario {
-        public Vector3[] points;
-        public int waypoint;
+    abstract class Scenario {
+        public string Name;
 
-        public List<Blip> blips = new List<Blip> { };
+        public Vector3[] Points;
+        public int Waypoint;
 
-        public Vector3 startPosition;
-        public float startHeading;
+        public List<Blip> Blips = new List<Blip> { };
 
-        public VehicleHash vehicleHash = VehicleHash.Cruiser;
-        public Weather weather = Weather.ExtraSunny;
+        public Vector3 StartPosition;
+        public float StartHeading;
 
-        bool running = false;
+        public VehicleHash VehicleHash = VehicleHash.Cruiser;
+        public Weather Weather = Weather.ExtraSunny;
+
+        bool Running = false;
 
         public Vehicle vehicle;
         public List<Actor> actors = new List<Actor>();
         public List<Trigger> triggers = new List<Trigger>();
+
+        public DataLog Logger;
+        public Stopwatch stopwatch;
 
         public void Main() {
             Log("Scenario.Main()");
@@ -35,8 +41,8 @@ namespace BepMod {
         public Scenario() { }
 
         public void SetStart(Vector3 position, float heading) {
-            startPosition = position;
-            startHeading = heading;
+            StartPosition = position;
+            StartHeading = heading;
         }
 
         private void ClearActors() {
@@ -50,16 +56,20 @@ namespace BepMod {
         public virtual void PreRun() { }
         public virtual void PostRun() { }
 
-        public virtual void Run() {
+
+        public virtual void Run(DataLog dataLog) {
+            stopwatch = new Stopwatch();
+            Logger = dataLog;
+            
             Log("Scenario.Run()");
 
             Stop();
 
-            Game.Player.Character.Position = startPosition;
-            Game.Player.Character.Heading = startHeading;
+            Game.Player.Character.Position = StartPosition;
+            Game.Player.Character.Heading = StartHeading;
 
-            waypoint = 0;
-            running = true;
+            Waypoint = 0;
+            Running = true;
 
             foreach(Blip blip in World.GetActiveBlips()) {
                 blip.Remove();
@@ -73,16 +83,17 @@ namespace BepMod {
 
             AddBlipsForPoints();
 
-            for (int i = 0; i < points.Length; i++) {
-                Vector3 point = points[i];
+            for (int i = 0; i < Points.Length; i++) {
+                Vector3 point = Points[i];
                 Trigger pointTrigger = AddTrigger(
                     point, 
-                    name: "Waypoint " + i.ToString()
+                    name: i.ToString()
                 );
+                pointTrigger.NameFormat = "WAYPOINT_{0}";
                 
                 pointTrigger.TriggerEnter += (sender, index, e) => {
-                    if (index < points.Length) {
-                        SetWaypoint(Math.Min(points.Length - 1, index + 2));
+                    if (index < Points.Length) {
+                        SetWaypoint(Math.Min(Points.Length - 1, index + 2));
                     } else {
                         ClearWaypoint();
                     }
@@ -91,7 +102,7 @@ namespace BepMod {
 
             PreRun();
 
-            vehicle = World.CreateVehicle(vehicleHash, startPosition, startHeading);
+            vehicle = World.CreateVehicle(VehicleHash, StartPosition, StartHeading);
 
             vehiclePool.Add(vehicle.Handle);
 
@@ -110,17 +121,26 @@ namespace BepMod {
             Game.Player.Character.DrownsInWater = false;
 
             GameplayCamera.RelativeHeading = 0.0f;
+            World.RenderingCamera.Direction = Points[1];
 
-            World.Weather = weather;
+            World.Weather = Weather;
+
+            stopwatch.Start();
+            Logger.Start(this);
 
             PostRun();
 
             UI.Notify("Scenario loaded");
         }
 
+        override public string ToString()
+        {
+            return Name;
+        }
+
         public void SetWaypoint(int index) {
             Log("Set waypoint " + index.ToString());
-            Vector3 waypoint = points[index];
+            Vector3 waypoint = Points[index];
             Function.Call(Hash.SET_NEW_WAYPOINT, waypoint.X, waypoint.Y);
         }
 
@@ -129,27 +149,14 @@ namespace BepMod {
         public void AddBlibForPoint(Vector3 point, int index) {
             Blip blip = World.CreateBlip(point);
             blip.Name = "Point " + index.ToString();
-            blips.Add(blip);
+            Blips.Add(blip);
         }
 
 
-        //private void DoKeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
-        //{
-        //    if (e.KeyCode == System.Windows.Forms.Keys.S) {
-        //        braking = true;
-        //    }
-        //}
-
-        //private void DoKeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
-        //{
-        //    if (e.KeyCode == System.Windows.Forms.Keys.S) {
-        //        braking = false;
-        //    }
-        //}
-
-
         public void DoTick() {
-            if (running) {
+            if (Running) {
+                World.CurrentDayTime = new TimeSpan(12, 0, 0);
+
                 Game.Player.Character.Health = 100;
 
                 DoRemoveVehicles();
@@ -168,17 +175,32 @@ namespace BepMod {
         public void Stop() {
             Log("Scenario.Stop()");
 
-            running = false;
+            stopwatch.Stop();
 
+            Logger.Stop();
+
+            Running = false;
+
+            ClearTriggers();
             ClearActors();
             ClearVehiclePool();
             ClearPedPool();
             RemoveOldVehicles();
         }
 
+        private void ClearTriggers()
+        {
+            foreach (Trigger trigger in triggers)
+            {
+                trigger.Dispose();
+            }
+
+            triggers.Clear();
+        }
+
         public void RemoveOldVehicles() {
             try {
-                int vehicleHashCode = vehicleHash.GetHashCode();
+                int vehicleHashCode = VehicleHash.GetHashCode();
 
                 foreach(Vehicle vehicle in World.GetAllVehicles()) {
                     if (vehicle.GetHashCode() == vehicleHashCode && vehicle.Exists()) {
@@ -189,8 +211,8 @@ namespace BepMod {
         }
 
         public void AddBlipsForPoints() {
-            for (int i = 0; i < points.Length; i++) {
-                AddBlibForPoint(points[i], i);
+            for (int i = 0; i < Points.Length; i++) {
+                AddBlibForPoint(Points[i], i);
             }
         }
 
@@ -239,6 +261,18 @@ namespace BepMod {
         {
             int handle = entity.Handle;
             return actors.Find(x => x.pedHandle == handle || x.vehicleHandle == handle);
+        }
+
+
+        // Log helpers
+        public List<Trigger> GetActiveTriggers()
+        {
+            return triggers.FindAll(x => x.triggeredInside);
+        }
+
+        public List<Actor> GetActorsInRange()
+        {
+            return actors.FindAll(x => x.triggeredInside);
         }
     }
 }

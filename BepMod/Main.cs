@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
+﻿using System;
+using System.Threading;
+using System.Windows.Forms;
+using System.Collections.Generic;
 
 using GTA;
 using GTA.Math;
@@ -8,14 +10,10 @@ using GTA.Native;
 using NativeUI;
 
 using static BepMod.Util;
-using System;
-using System.Threading;
-
-using System.Windows.Forms;
 
 namespace BepMod {
     public class Main : Script {
-        private Scenario scenario;
+        private Scenario ActiveScenario;
         private List<Scenario> scenarios = new List<Scenario>();
         private int scenariosCount = 0;
         public Entity lastRayHitEntity;
@@ -23,27 +21,16 @@ namespace BepMod {
         private UIMenu menu;
         private MenuPool menuPool = new MenuPool();
 
-        private bool renderPosition = false;
-        private bool renderRay = false;
-        private UIText positionMessage;
-
-        private double degreesPerPixel;
+        private SmartEye smartEye = new SmartEye();
+        private DataLog dataLog;
 
         public Main() {
             Log("Main.Main()");
 
-            positionMessage = new UIText("",
-                new Point((int) System.Math.Round((double) UI.WIDTH / 2), 20),
-                .8f,
-                Color.Yellow,
-                GTA.Font.ChaletComprimeCologne,
-                true
-            );
-
+            dataLog = new DataLog(smartEye);
 
             scenarios.Add(new Scenario1());
             // scenarios.Add(new Scenario2());
-            // scenarios.Add(new Scenario3());
 
             menu = new UIMenu("BepMod", "");
 
@@ -73,7 +60,7 @@ namespace BepMod {
                 };
 
                 var pointsList = new List<dynamic> { };
-                for (int i = 0; i < scenario.points.Length; i++) {
+                for (int i = 0; i < scenario.Points.Length; i++) {
                     pointsList.Add(String.Format("Point {0}", i));
                 }
 
@@ -81,7 +68,7 @@ namespace BepMod {
                 scenarioSubMenu.AddItem(pointMenuListItem);
                 scenarioSubMenu.OnItemSelect += (sender, item, index) => {
                     if (index == 1) {
-                        Vector3 position = scenario.points[pointIndex];
+                        Vector3 position = scenario.Points[pointIndex];
                         UI.Notify("Teleport to: " + position.ToString());
                         Game.Player.Character.Position = position;
                     }
@@ -147,9 +134,6 @@ namespace BepMod {
 
             Game.Player.Character.IsInvincible = true;
 
-            double diag = Math.Sqrt(UI.WIDTH * UI.WIDTH + UI.HEIGHT * UI.HEIGHT);
-            degreesPerPixel = GameplayCamera.FieldOfView / diag;
-
             if (Game.IsScreenFadedOut) {
                 Game.FadeScreenIn(0);
             }
@@ -158,6 +142,7 @@ namespace BepMod {
         private void MainAborted(object sender, EventArgs e)
         {
             Log("ABORTED");
+            dataLog.Stop();
             smartEye.Stop();
         }
 
@@ -172,9 +157,16 @@ namespace BepMod {
         private void DoKeyDown(object sender, System.Windows.Forms.KeyEventArgs e) {
             if (e.KeyCode == System.Windows.Forms.Keys.B) {
                 menu.Visible = !menu.Visible;
-            } else if (e.KeyCode == System.Windows.Forms.Keys.I) {
+            }
+            else if (e.KeyCode == System.Windows.Forms.Keys.I) {
                 RunScenario(0);
-            } else if (e.KeyCode == System.Windows.Forms.Keys.N) {
+            }
+            else if (e.KeyCode == System.Windows.Forms.Keys.K)
+            {
+                StopScenario();
+            }
+            else if (e.KeyCode == System.Windows.Forms.Keys.N)
+            {
                 Vector3 position = Game.Player.Character.Position;
                 float heading = Game.Player.Character.Heading;
 
@@ -206,6 +198,17 @@ namespace BepMod {
             {
                 smartEye.Start();
             }
+            else if (e.KeyCode == Keys.OemPeriod)
+            {
+                if (debugLevel >= 3)
+                {
+                    debugLevel = 0;
+                } else
+                {
+                    debugLevel++;
+                }
+                ClearMessages();
+            }
         }
 
         public void Mayhem() {
@@ -234,143 +237,42 @@ namespace BepMod {
 
         private void StopScenario() {
             Log("Main.StopScenario()");
-            if (scenario != null) {
+            if (ActiveScenario != null) {
                 Log("scenario != null");
-                scenario.Stop();
-                scenario = null;
+                ActiveScenario.Stop();
+                ActiveScenario = null;
             }
         }
 
         private void RunScenario(int index) {
             Log("Main.RunScenario()");
             StopScenario();
-            scenario = scenarios[index];
-            scenario.Run();
+            ActiveScenario = scenarios[index];
+            ActiveScenario.Run(dataLog);
         }
 
         private void Menu_OnCheckboxChange(UIMenu sender, UIMenuCheckboxItem checkboxItem, bool Checked) {
             int index = sender.MenuItems.IndexOf(checkboxItem);
-
-            if (index == (scenariosCount + 2)) {
-                renderPosition = Checked;
-            } else if (index == (scenariosCount + 3)) {
-                renderRay = Checked;
-            }
         }
 
         bool ticked = false;
         private void MainTick(object sender, EventArgs e) {
+            menuPool.ProcessMenus();
+
             if (ticked == false) {
                 ticked = true;
                 try {
+                    smartEye.Start();
                     RunScenario(0);
                 } catch {}
             }
 
             smartEye.DoTick();
-
-            if (renderPosition) {
-                Vector3 position = Game.Player.Character.Position;
-                float heading = Game.Player.Character.Heading;
-
-                positionMessage.Caption = String.Format(
-                    "{0}, {1}, {2}, {3}",
-                    position.X.ToString("0.0"),
-                    position.Y.ToString("0.0"),
-                    position.Z.ToString("0.0"),
-                    heading.ToString("0.0")
-                );
-
-                positionMessage.Draw();
-            } else if (positionMessage != null && positionMessage.Caption != "") {
-                positionMessage.Caption = "";
-                positionMessage.Draw();
-            }
-
-            SmartEye.WorldIntersection wi = smartEye.lastClosestWorldIntersection;
-            ShowMessage(wi.ToString(), 15);
-
-            Vector3 rc = wi.ObjectPoint;
-
-            Vector2 rcp = new Vector2(rc.X, rc.Y);
-
-            Vector2 p = new Vector2(
-                rcp.X / UI.WIDTH, 
-                rcp.Y / UI.HEIGHT
-            ) * 2 - new Vector2(1, 1);
-
-            Vector3 camPoint;
-            Vector3 farPoint;
-            Gta5EyeTracking.Geometry.ScreenRelToWorld(p, out camPoint, out farPoint);            
-            
-            Vector3 direction = farPoint - camPoint;
-
-            RaycastResult ray = World.Raycast(
-                source: camPoint,
-                direction: direction,
-                maxDistance: 200f,
-                options: IntersectOptions.Everything,
-                ignoreEntity: Game.Player.Character
-            );
-
-            lastRayHitEntity = ray.HitEntity;
-
-            if (debugLevel >= 1)
-            {
-                ShowMessage("Frame: " + smartEye.lastFrameNumber, 2);
-                ShowMessage("DitHitEntity: " + ray.DitHitEntity.ToString(), 3);
-                ShowMessage("DitHitAnything: " + ray.DitHitAnything.ToString(), 4);
-                ShowMessage("HitCoords: " + ray.HitCoords.ToString(), 5);
-                ShowMessage("SurfaceNormal: " + ray.SurfaceNormal.ToString(), 6);
-
-                if (debugLevel > 1)
-                {
-                    UIRectangle et = new UIRectangle(
-                        new Point((int)rcp.X, (int)rcp.Y),
-                        new Size(new Point(15, 15)),
-                        Color.FromArgb(127, Color.Yellow)
-                    );
-                    et.Draw();
-
-                    World.DrawMarker(
-                        MarkerType.DebugSphere,
-                        ray.HitCoords,
-                        Vector3.Zero,
-                        Vector3.Zero,
-                        new Vector3(1, 1, 1),
-                        Color.FromArgb(127, Color.White)
-                    );
-                }
-
-                if (ray.HitEntity != null)
-                {
-                    ShowMessage("HitEntity: " + ray.HitEntity.Handle.ToString(), 8);
-
-                    if (scenario != null)
-                    {
-                        Actor hitActor = scenario.FindActorByEntity(ray.HitEntity);
-
-                        if (hitActor != null)
-                        {
-                            ShowMessage("HitActor: " + hitActor.Name, 9);
-                        }
-                        else
-                        {
-                            ShowMessage("HitActor: -", 9);
-                        }
-                    }
-                }
-                else
-                {
-                    ShowMessage("HitEntity: -", 8);
-                }
-            }
-
-            menuPool.ProcessMenus();
-
+            dataLog.DoTick();
             Util.DoTick();
-            if (scenario != null) {
-                scenario.DoTick();
+
+            if (ActiveScenario != null) {
+                ActiveScenario.DoTick();
             }
         }
     }

@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+
 using GTA;
 using GTA.Math;
 using GTA.Native;
-using NativeUI;
-
 
 namespace BepMod {
     enum TrafficLightColor { GREEN = 0, RED, YELLOW, AUTO }
-
 
     static class Util {
         public static int debugLevel = 2;
@@ -33,8 +31,6 @@ namespace BepMod {
         public static System.Media.SoundPlayer gpsSoundRight = new System.Media.SoundPlayer();
         public static System.Media.SoundPlayer gpsSoundStraight = new System.Media.SoundPlayer();
         public static string audioBase = ".\\scripts\\GPS\\Audio\\snoop_dogg\\";
-
-        public static SmartEye smartEye = new SmartEye();
 
         static Util() { }
 

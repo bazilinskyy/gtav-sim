@@ -1,9 +1,11 @@
-﻿using static BepMod.Util;
-using System;
+﻿using System;
 using System.Drawing;
+
 using GTA;
 using GTA.Math;
 using GTA.Native;
+
+using static BepMod.Util;
 
 namespace BepMod
 {
@@ -17,10 +19,7 @@ namespace BepMod
     /// Available events: InsideRadius, OutsideRadius, 
     /// </remarks>
     class Actor : IDisposable {
-        public bool debug = false;
-
         public float distance;
-        public bool renderDistance = false;
 
         public String Name;
 
@@ -95,6 +94,11 @@ namespace BepMod
             vehicle = null;
         }
 
+        override public string ToString()
+        {
+            return String.Format("ACTOR_{0}", Name);
+        }
+
         public Vector3 Position {
             get { return (vehicle != null) ? (vehicle.Position) : (ped.Position); }
         }
@@ -102,7 +106,7 @@ namespace BepMod
         protected virtual void OnActorInsideRadius(EventArgs e) {
             Log("Actor inside radius: " + Name);
             if (debugLevel > 0) {
-                UI.Notify("Actor inside radius: " + Name);
+                ShowMessage("Actor inside radius: " + Name);
             }
 
             if (ActorInsideRadius != null) {
@@ -114,7 +118,7 @@ namespace BepMod
             Log("Actor outside radius: " + Name);
             if (debugLevel > 0)
             {
-                UI.Notify("Actor outside radius: " + Name);
+                ShowMessage("Actor outside radius: " + Name);
             }
 
             if (ActorOutsideRadius != null) {
@@ -129,15 +133,11 @@ namespace BepMod
             distance = Position.DistanceTo(playerPos);
             bool inRange = distance < triggerRadius;
 
-            if (renderDistance == true) {
-                ShowMessage(Name + " distance: " + distance.ToString("0.00"), 4);
-            }
-
             if (vehicle != null && vehicle.Speed < MinSpeed) {
                 vehicle.Speed = MinSpeed;
             }
             
-            if (debug == true || debugLevel > 2) {
+            if (debugLevel > 2) {
                 RenderCircleOnGround(
                     Position, 
                     triggerRadius, 

@@ -17,7 +17,7 @@ const build = pks => {
   let pos = 0;
 
   pos = buf.write('MOCK', 0, 4);
-  pos = buf.writeUInt16BE(1234, pos);
+  pos = buf.writeUInt16BE(4, pos);
   pos += 2; // length
 
   pks.forEach(([id, ...vs]) => {
@@ -27,47 +27,54 @@ const build = pks => {
     pos += 2; // length
 
     vs.forEach(([t, v]) => {
-      pos = buf[`write${t}BE`](v, pos);
+      if (t === 'String') {
+        pos = buf.writeUInt16BE(v.length, pos);
+        for (let u = 0; u < v.length; u++) {
+          pos = buf.writeInt8(v[u], pos);
+        }
+      } else {
+        pos = buf[`write${t}BE`](v, pos);
+      }
     });
 
     buf.writeUInt16BE((pos - lp) - 4, lp + 2);
   });
 
-  buf.writeUInt16BE(pos, 6);
+  buf.writeUInt16BE(pos - 8, 6);
 
-  // console.log(buf.slice(0, pos));
   return buf.slice(0, pos);
 };
 
 const timeout = 25;
 let x = 0, xd = 1;
 let y = 0, yd = 1;
-const margin = 50;
+const xMargin = uiWidth/2.75;
+const yMargin = uiHeight/2.25;
 
 const getMessage = () => {
-  x = x + xd * (Math.random() * timeout/2);
-  if (x > uiWidth - margin) {
+  x = x + xd * (Math.random() * timeout/10);
+  if (x > uiWidth - xMargin) {
     xd = -1;
-    x = uiWidth - margin;
-  } else if (x < margin) {
+    x = uiWidth - xMargin;
+  } else if (x < xMargin) {
     xd = 1;
-    x = margin;
+    x = xMargin;
   }
 
-  y = y + yd * (Math.random() * timeout/2);
-  if (y > uiHeight - margin) {
+  y = y + yd * (Math.random() * timeout/10);
+  if (y > uiHeight - yMargin) {
     yd = -1;
-    y = uiHeight - margin;
-  } else if (y < margin) {
+    y = uiHeight - yMargin;
+  } else if (y < yMargin) {
     yd = 1;
-    y = margin;
+    y = yMargin;
   }
 
   return build([
     [1, 
       ['UInt32', ++frame]],
-    // [0x0016, 
-    //   ['Double', ((uiWidth - x) / uiWidth)]],
+    [0x0016, 
+      ['Double', ((uiWidth - x) / uiWidth)]],
     [64, 
       ['UInt16', 1],
       ['Double', 0],
@@ -75,7 +82,8 @@ const getMessage = () => {
       ['Double', 0],
       ['Double', x],
       ['Double', y],
-      ['Double', 0]]
+      ['Double', 0],
+      ['String', 'hoi']]
   ])
 };
 
