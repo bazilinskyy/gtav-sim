@@ -14,19 +14,19 @@ namespace BepMod.Experiment
 
             Points = new Vector3[] {
                 new Vector3(-1054.6f, -1680.5f, 4.1f),
-                    new Vector3(-1040.4f, -1663.6f, 4.1f),
-                    new Vector3(-1019.4f, -1641.4f, 4.1f),
-                    new Vector3(-1009.7f, -1575.9f, 4.7f),
-                    new Vector3(-1038.8f, -1532.3f, 4.7f),
-                    new Vector3(-1092.9f, -1545.7f, 4.0f),
-                    new Vector3(-1133.6f, -1510.5f, 4.0f),
-                    new Vector3(-1154.5f, -1479.0f, 3.9f),
-                    new Vector3(-1178.5f, -1443.3f, 3.9f),
-                    new Vector3(-1175.3f, -1426.8f, 4.1f),
-                    new Vector3(-1144.7f, -1400.7f, 4.8f),
-                    new Vector3(-1093.6f, -1378.0f, 4.8f),
-                    new Vector3(-1057.7f, -1320.7f, 5.1f),
-                    new Vector3(-993.0f, -1260.9f, 5.3f)
+                new Vector3(-1040.4f, -1663.6f, 4.1f),
+                new Vector3(-1019.4f, -1641.4f, 4.1f),
+                new Vector3(-1009.7f, -1575.9f, 4.7f),
+                new Vector3(-1038.8f, -1532.3f, 4.7f),
+                new Vector3(-1092.9f, -1545.7f, 4.0f),
+                new Vector3(-1133.6f, -1510.5f, 4.0f),
+                new Vector3(-1154.5f, -1479.0f, 3.9f),
+                new Vector3(-1178.5f, -1443.3f, 3.9f),
+                new Vector3(-1175.3f, -1426.8f, 4.1f),
+                new Vector3(-1144.7f, -1400.7f, 4.8f),
+                new Vector3(-1093.6f, -1378.0f, 4.8f),
+                new Vector3(-1057.7f, -1320.7f, 5.1f),
+                new Vector3(-993.0f, -1260.9f, 5.3f)
             };
 
             StartPosition = Points[0]; StartHeading = 315.0f;

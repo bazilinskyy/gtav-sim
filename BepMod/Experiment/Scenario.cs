@@ -1,14 +1,12 @@
-﻿using static BepMod.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
+using System.Diagnostics;
 
 using GTA;
 using GTA.Math;
-
 using GTA.Native;
-using System.Diagnostics;
+
+using static BepMod.Util;
 
 namespace BepMod.Experiment
 {
@@ -174,6 +172,53 @@ namespace BepMod.Experiment
             Blips.Add(blip);
         }
 
+        public struct Delay
+        {
+            bool Cancelled;
+
+            Action Callback;
+            Int64 Timeout;
+
+            Int64 StartTime;
+
+            public bool IsCancelled { get => Cancelled; }
+
+            public Delay(Action callback, Int64 timeoutMs, Int64 elapsedMs)
+            {
+                Cancelled = false;
+                Callback = callback;
+                Timeout = timeoutMs;
+                StartTime = elapsedMs;
+            }
+
+            public bool IsExpired(Int64 ElapsedMilliseconds)
+            {
+                return (ElapsedMilliseconds - StartTime) > Timeout;
+            }
+
+            public void Cancel()
+            {
+                Cancelled = true;
+            }
+
+            public void Call()
+            {
+                Callback();
+            }
+        }
+
+        private List<Delay> delays = new List<Delay>();
+
+        public Delay SetTimeout(Action callback, Int64 timeoutMs)
+        {
+            return SetTimeout(new Delay(callback, timeoutMs, stopwatch.ElapsedMilliseconds));
+        }
+
+        public Delay SetTimeout(Delay delay)
+        {
+            delays.Add(delay);
+            return delay;
+        }
 
         public void DoTick()
         {
@@ -185,6 +230,19 @@ namespace BepMod.Experiment
 
                 DoRemoveVehicles();
                 DoRemovePeds();
+
+                foreach (Delay delay in delays)
+                {
+                    if (delay.IsCancelled)
+                    {
+                        delays.Remove(delay);
+                    }
+                    else if (delay.IsExpired(stopwatch.ElapsedMilliseconds))
+                    {
+                        delay.Call();
+                        delays.Remove(delay);
+                    }
+                }
 
                 foreach (Actor actor in actors)
                 {

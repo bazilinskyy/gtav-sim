@@ -1,8 +1,10 @@
-﻿using static BepMod.Util;
-using System;
+﻿using System;
 using System.Drawing;
+
 using GTA;
 using GTA.Math;
+
+using static BepMod.Util;
 
 namespace BepMod.Experiment
 {
@@ -55,10 +57,7 @@ namespace BepMod.Experiment
                 ShowMessage("Entered trigger: " + triggerName);
             }
 
-            if (TriggerEnter != null)
-            {
-                TriggerEnter(this, index, e);
-            }
+            TriggerEnter?.Invoke(this, index, e);
         }
 
         protected virtual void OnTriggerExit(EventArgs e)
@@ -69,10 +68,7 @@ namespace BepMod.Experiment
                 ShowMessage("Exited trigger: " + triggerName);
             }
 
-            if (TriggerExit != null)
-            {
-                TriggerExit(this, index, e);
-            }
+            TriggerExit?.Invoke(this, index, e);
         }
 
         public virtual void DoTick()

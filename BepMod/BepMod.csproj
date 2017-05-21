@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Experiment\DataLog.cs" />
+    <Compile Include="Experiment\Delay.cs" />
     <Compile Include="SmartEye.cs" />
     <Compile Include="Gta5EyeTracking\CameraHelper.cs" />
     <Compile Include="Gta5EyeTracking\Geometry.cs" />

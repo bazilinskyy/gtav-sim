@@ -121,10 +121,7 @@ namespace BepMod.Experiment
                 ShowMessage("Actor inside radius: " + Name);
             }
 
-            if (ActorInsideRadius != null)
-            {
-                ActorInsideRadius(this, e);
-            }
+            ActorInsideRadius?.Invoke(this, e);
         }
 
         protected virtual void OnActorOutsideRadius(EventArgs e)
@@ -135,10 +132,7 @@ namespace BepMod.Experiment
                 ShowMessage("Actor outside radius: " + Name);
             }
 
-            if (ActorOutsideRadius != null)
-            {
-                ActorOutsideRadius(this, e);
-            }
+            ActorOutsideRadius?.Invoke(this, e);
         }
 
         public virtual void DoTick()
