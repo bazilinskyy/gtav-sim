@@ -161,8 +161,8 @@ namespace SigScan.Classes
 					return false;
 				return true;
 			}
-			catch (Exception ex)
-			{
+			catch
+            {
 				return false;
 			}
 		}
@@ -236,8 +236,8 @@ namespace SigScan.Classes
 				// Pattern was not found. 
 				return IntPtr.Zero;
 			}
-			catch (Exception ex)
-			{
+			catch
+            {
 				return IntPtr.Zero;
 			}
 		}

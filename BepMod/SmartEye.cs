@@ -14,7 +14,7 @@ using static BepMod.Util;
 
 namespace BepMod
 {
-    class EyeTracker
+    class SmartEye
     {
         public string status = "";
 
@@ -23,7 +23,7 @@ namespace BepMod
             ShowMessage(status, 1);
         }
 
-        public EyeTrackerPacket lastPacket = new EyeTrackerPacket();
+        public SmartEyePacket lastPacket = new SmartEyePacket();
         public UInt32 lastFrameNumber;
         public WorldIntersection lastClosestWorldIntersection = new WorldIntersection(
             new Vector3(0, 0, 0),
@@ -51,16 +51,16 @@ namespace BepMod
 
         UdpClient socket;
 
-        ~EyeTracker()
+        ~SmartEye()
         {
-            Log("~EyeTracker()");
+            Log("~SmartEye()");
             Stop();
         }
 
         public void Start()
         {
-            Log("EyeTracker.Start()");
-            status = "EyeTracker.Start()";
+            Log("SmartEye.Start()");
+            status = "SmartEye.Start()";
 
             if (listening == false)
             {
@@ -77,8 +77,8 @@ namespace BepMod
 
         public void Stop()
         {
-            Log("EyeTracker.Stop()");
-            status = "EyeTracker.Stop()";
+            Log("SmartEye.Stop()");
+            status = "SmartEye.Stop()";
 
             if (listening == true)
             {
@@ -103,14 +103,14 @@ namespace BepMod
             }
             catch (SocketException e)
             {
-                Log("EyeTracker listener not initialized correctly: " + e.ToString());
-                status = "EyeTracker listen failed";
+                Log("SmartEye listener not initialized correctly: " + e.ToString());
+                status = "SmartEye listen failed";
             }
 
             if (socket != null)
             {
                 IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-                status = "EyeTracker listening on " + listenPort.ToString();
+                status = "SmartEye listening on " + listenPort.ToString();
 
                 while (listening)
                 {
@@ -118,11 +118,11 @@ namespace BepMod
                     {
                         byte[] data = socket.Receive(ref groupEP);
 
-                        EyeTrackerPacket res = new EyeTrackerPacket(data);
+                        SmartEyePacket res = new SmartEyePacket(data);
 
                         lastPacket = res;
 
-                        foreach (EyeTrackerSubPacket subPacket in res.SubPackets)
+                        foreach (SmartEyeSubPacket subPacket in res.SubPackets)
                         {
                             if (subPacket.Id == 1)
                             {
@@ -136,7 +136,7 @@ namespace BepMod
                     }
                     catch (Exception e)
                     {
-                        Log("EyeTracker exception: " + e.ToString());
+                        Log("SmartEye exception: " + e.ToString());
                     }
                 }
             }
@@ -185,13 +185,13 @@ namespace BepMod
             }
         }
 
-        public struct EyeTrackerSubPacket
+        public struct SmartEyeSubPacket
         {
             public UInt16 Id;
             public UInt16 Length;
             public byte[] Data;
 
-            public EyeTrackerSubPacket(byte[] value, int startIndex)
+            public SmartEyeSubPacket(byte[] value, int startIndex)
             {
                 Id = BitConverter.ToUInt16(GetData(value, startIndex, 2), 0);
                 Length = BitConverter.ToUInt16(GetData(value, startIndex + 2, 2), 0);
@@ -237,34 +237,34 @@ namespace BepMod
             }
         }
 
-        public struct EyeTrackerPacket
+        public struct SmartEyePacket
         {
             public string Id;
             public UInt16 Type;
             public UInt16 Length;
 
-            public List<EyeTrackerSubPacket> SubPackets;
+            public List<SmartEyeSubPacket> SubPackets;
 
-            public EyeTrackerPacket(byte[] value)
+            public SmartEyePacket(byte[] value)
             {
                 Id = Encoding.ASCII.GetString(value, 0, 4);
                 Type = BitConverter.ToUInt16(GetData(value, 4, 2), 0);
                 Length = BitConverter.ToUInt16(GetData(value, 6, 2), 0);
-                SubPackets = new List<EyeTrackerSubPacket>();
+                SubPackets = new List<SmartEyeSubPacket>();
 
                 int pos = 8;
 
                 while (pos < Length)
                 {
-                    EyeTrackerSubPacket subPacket = new EyeTrackerSubPacket(value, pos);
+                    SmartEyeSubPacket subPacket = new SmartEyeSubPacket(value, pos);
                     SubPackets.Add(subPacket);
                     pos += (4 + subPacket.Length);
                 }
             }
 
-            public EyeTrackerSubPacket GetSubPacket(UInt16 type)
+            public SmartEyeSubPacket GetSubPacket(UInt16 type)
             {
-                foreach (EyeTrackerSubPacket subPacket in SubPackets)
+                foreach (SmartEyeSubPacket subPacket in SubPackets)
                 {
                     if (subPacket.Id == type)
                     {
@@ -272,7 +272,7 @@ namespace BepMod
                     }
                 }
 
-                return new EyeTrackerSubPacket();
+                return new SmartEyeSubPacket();
             }
         }
     }

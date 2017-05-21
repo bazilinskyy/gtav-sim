@@ -25,7 +25,7 @@ namespace BepMod {
         bool running = false;
 
         public Vehicle vehicle;
-        public List<Participant> participants = new List<Participant>();
+        public List<Actor> actors = new List<Actor>();
         public List<Trigger> triggers = new List<Trigger>();
 
         public void Main() {
@@ -39,12 +39,12 @@ namespace BepMod {
             startHeading = heading;
         }
 
-        private void ClearParticipants() {
-            foreach(Participant participant in participants) {
-                participant.Dispose();
+        private void ClearActors() {
+            foreach(Actor actor in actors) {
+                actor.Dispose();
             }
 
-            participants.Clear();
+            actors.Clear();
         }
 
         public virtual void PreRun() { }
@@ -65,7 +65,7 @@ namespace BepMod {
                 blip.Remove();
             }
 
-            ClearParticipants();
+            ClearActors();
             pedPool.Clear();
             vehiclePool.Clear();
             DoRemovePeds();
@@ -155,8 +155,8 @@ namespace BepMod {
                 DoRemoveVehicles();
                 DoRemovePeds();
 
-                foreach(Participant participant in participants) {
-                    participant.DoTick();
+                foreach(Actor actor in actors) {
+                    actor.DoTick();
                 }
 
                 foreach(Trigger trigger in triggers) {
@@ -170,7 +170,7 @@ namespace BepMod {
 
             running = false;
 
-            ClearParticipants();
+            ClearActors();
             ClearVehiclePool();
             ClearPedPool();
             RemoveOldVehicles();
@@ -199,14 +199,14 @@ namespace BepMod {
             float x, float y, float z, float heading,
             VehicleHash vehicleHash = VehicleHash.Prairie
         ) {
-            return AddParkedVehicle(new Location(x, y, z, heading), vehicleHash);
+            return AddParkedVehicle(new Vector3(x, y, z), heading, vehicleHash);
         }
 
         public Vehicle AddParkedVehicle(
-            Location location, 
+            Vector3 position, float heading,
             VehicleHash vehicleHash = VehicleHash.Prairie
         ) {
-            Vehicle vehicle = World.CreateVehicle(vehicleHash, location.position, location.heading);
+            Vehicle vehicle = World.CreateVehicle(vehicleHash, position, heading);
             vehicle.PlaceOnGround();
             vehiclePool.Add(vehicle.Handle);
             return vehicle;
@@ -223,23 +223,22 @@ namespace BepMod {
             return trigger;
         }
 
-        public Participant AddParticipant(
-            Location location,
+        public Actor AddActor(
+            Vector3 position, float heading,
             float radius = 5.0f,
             PedHash pedHash = default(PedHash),
             VehicleHash vehicleHash = default(VehicleHash),
             String name = ""
         ) {
-            Participant participant = new Participant(location, radius, pedHash, vehicleHash, name);
-            participants.Add(participant);
-            return participant;
+            Actor actor = new Actor(position, heading, radius, pedHash, vehicleHash, name);
+            actors.Add(actor);
+            return actor;
         }
 
-        public Participant FindParticipantByEntity(Entity entity)
+        public Actor FindActorByEntity(Entity entity)
         {
             int handle = entity.Handle;
-            return participants.Find(
-                x => x.pedHandle == handle || x.vehicleHandle == handle);
+            return actors.Find(x => x.pedHandle == handle || x.vehicleHandle == handle);
         }
     }
 }

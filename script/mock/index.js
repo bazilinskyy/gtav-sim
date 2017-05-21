@@ -3,7 +3,7 @@
 const Promise = require('bluebird');
 const dgram = require('dgram');
 
-const port = process.argv[2] || 5002;
+const port = process.argv[2] || 5001;
 const host = process.argv[3] || '127.0.0.1';
 const uiWidth = 1280;
 const uiHeight = 720;

@@ -147,9 +147,6 @@ namespace BepMod {
 
             Game.Player.Character.IsInvincible = true;
 
-            // RunScenario(0);
-            //eyeTracker.Start();
-
             double diag = Math.Sqrt(UI.WIDTH * UI.WIDTH + UI.HEIGHT * UI.HEIGHT);
             degreesPerPixel = GameplayCamera.FieldOfView / diag;
 
@@ -161,12 +158,12 @@ namespace BepMod {
         private void MainAborted(object sender, EventArgs e)
         {
             Log("ABORTED");
-            eyeTracker.Stop();
+            smartEye.Stop();
         }
 
         ~Main() {
             Log("Main.~Main()");
-            eyeTracker.Stop();
+            smartEye.Stop();
             StopScenario();
             ClearVehiclePool();
             Log("Main.~Main(): shut down complete");
@@ -182,7 +179,7 @@ namespace BepMod {
                 float heading = Game.Player.Character.Heading;
 
                 String location = String.Format(
-                    "new Location({0}f, {1}f, {2}f, {3}f)",
+                    "new Vector3({0}f, {1}f, {2}f), {3}f",
                     position.X.ToString("0.0"),
                     position.Y.ToString("0.0"),
                     position.Z.ToString("0.0"),
@@ -203,11 +200,11 @@ namespace BepMod {
             }
             else if (e.KeyCode == System.Windows.Forms.Keys.L)
             {
-                eyeTracker.Stop();
+                smartEye.Stop();
             }
             else if (e.KeyCode == System.Windows.Forms.Keys.O)
             {
-                eyeTracker.Start();
+                smartEye.Start();
             }
         }
 
@@ -270,7 +267,7 @@ namespace BepMod {
                 } catch {}
             }
 
-            eyeTracker.DoTick();
+            smartEye.DoTick();
 
             if (renderPosition) {
                 Vector3 position = Game.Player.Character.Position;
@@ -290,7 +287,7 @@ namespace BepMod {
                 positionMessage.Draw();
             }
 
-            EyeTracker.WorldIntersection wi = eyeTracker.lastClosestWorldIntersection;
+            SmartEye.WorldIntersection wi = smartEye.lastClosestWorldIntersection;
             ShowMessage(wi.ToString(), 15);
 
             Vector3 rc = wi.ObjectPoint;
@@ -320,7 +317,7 @@ namespace BepMod {
 
             if (debugLevel >= 1)
             {
-                ShowMessage("Frame: " + eyeTracker.lastFrameNumber, 2);
+                ShowMessage("Frame: " + smartEye.lastFrameNumber, 2);
                 ShowMessage("DitHitEntity: " + ray.DitHitEntity.ToString(), 3);
                 ShowMessage("DitHitAnything: " + ray.DitHitAnything.ToString(), 4);
                 ShowMessage("HitCoords: " + ray.HitCoords.ToString(), 5);
@@ -351,15 +348,15 @@ namespace BepMod {
 
                     if (scenario != null)
                     {
-                        Participant hitParticipant = scenario.FindParticipantByEntity(ray.HitEntity);
+                        Actor hitActor = scenario.FindActorByEntity(ray.HitEntity);
 
-                        if (hitParticipant != null)
+                        if (hitActor != null)
                         {
-                            ShowMessage("HitParticipant: " + hitParticipant.participantName, 9);
+                            ShowMessage("HitActor: " + hitActor.Name, 9);
                         }
                         else
                         {
-                            ShowMessage("HitParticipant: -", 9);
+                            ShowMessage("HitActor: -", 9);
                         }
                     }
                 }

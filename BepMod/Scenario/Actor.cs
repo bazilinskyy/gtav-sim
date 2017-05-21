@@ -8,26 +8,26 @@ using GTA.Native;
 namespace BepMod
 {
     // A delegate type for hooking up change notifications.
-    public delegate void ParticipantInsideRadiusEventHandler(object sender, EventArgs e);
-    public delegate void ParticipantOutsideRadiusEventHandler(object sender, EventArgs e);
+    public delegate void ActorInsideRadiusEventHandler(object sender, EventArgs e);
+    public delegate void ActorOutsideRadiusEventHandler(object sender, EventArgs e);
 
     /// <summary>
-    /// Participants are pedestrians, optionally with a vehicle.</summary>
+    /// Actors are pedestrians, optionally with a vehicle.</summary>
     /// <remarks>
     /// Available events: InsideRadius, OutsideRadius, 
     /// </remarks>
-    class Participant : IDisposable {
+    class Actor : IDisposable {
         public bool debug = false;
 
         public float distance;
         public bool renderDistance = false;
 
-        public String participantName;
+        public String Name;
 
         public float MinSpeed = 0.0f;
 
-        public event ParticipantInsideRadiusEventHandler ParticipantInsideRadius;
-        public event ParticipantOutsideRadiusEventHandler ParticipantOutsideRadius;
+        public event ActorInsideRadiusEventHandler ActorInsideRadius;
+        public event ActorOutsideRadiusEventHandler ActorOutsideRadius;
 
         public Vehicle vehicle;
         public Ped ped;
@@ -38,18 +38,19 @@ namespace BepMod
         public float triggerRadius;
         public bool triggeredInside = false;
         
-        public Participant(
-            Location location,
+        public Actor(
+            Vector3 position,
+            float heading,
             float radius = 0.0f,
             PedHash pedHash = default(PedHash),
             VehicleHash vehicleHash = default(VehicleHash),
             String name = ""
         ) {
             triggerRadius = radius;
-            participantName = name;
+            Name = name;
 
             if (vehicleHash != default(VehicleHash)) {
-                vehicle = World.CreateVehicle(vehicleHash, location.position, location.heading);
+                vehicle = World.CreateVehicle(vehicleHash, position, heading);
 
                 vehicle.PlaceOnGround();
                 vehicle.IsInvincible = true;
@@ -63,7 +64,7 @@ namespace BepMod
             }
 
             if (pedHash != default(PedHash)) {
-                ped = World.CreatePed(pedHash, location.position, location.heading);
+                ped = World.CreatePed(pedHash, position, heading);
 
                 ped.CanBeDraggedOutOfVehicle = false;
                 ped.IsInvincible = true;
@@ -79,7 +80,7 @@ namespace BepMod
         }
 
         public void Dispose() {
-            Log("Participant.Dispose()");
+            Log("Actor.Dispose()");
             if (ped != null && ped.Exists()) {
                 try { ped.Delete(); }
                 catch { }
@@ -98,38 +99,38 @@ namespace BepMod
             get { return (vehicle != null) ? (vehicle.Position) : (ped.Position); }
         }
 
-        protected virtual void OnParticipantInsideRadius(EventArgs e) {
-            Log("Participant inside radius: " + participantName);
+        protected virtual void OnActorInsideRadius(EventArgs e) {
+            Log("Actor inside radius: " + Name);
             if (debugLevel > 0) {
-                UI.Notify("Participant inside radius: " + participantName);
+                UI.Notify("Actor inside radius: " + Name);
             }
 
-            if (ParticipantInsideRadius != null) {
-                ParticipantInsideRadius(this, e);
+            if (ActorInsideRadius != null) {
+                ActorInsideRadius(this, e);
             }
         }
 
-        protected virtual void OnParticipantOutsideRadius(EventArgs e) {
-            Log("Participant outside radius: " + participantName);
+        protected virtual void OnActorOutsideRadius(EventArgs e) {
+            Log("Actor outside radius: " + Name);
             if (debugLevel > 0)
             {
-                UI.Notify("Participant outside radius: " + participantName);
+                UI.Notify("Actor outside radius: " + Name);
             }
 
-            if (ParticipantOutsideRadius != null) {
-                ParticipantOutsideRadius(this, e);
+            if (ActorOutsideRadius != null) {
+                ActorOutsideRadius(this, e);
             }
         }
 
         public virtual void DoTick() {
             Vector3 playerPos = Game.Player.Character.Position;
-            Vector3 participantPos = Position;
+            Vector3 actorPos = Position;
 
             distance = Position.DistanceTo(playerPos);
             bool inRange = distance < triggerRadius;
 
             if (renderDistance == true) {
-                ShowMessage(participantName + " distance: " + distance.ToString("0.00"), 4);
+                ShowMessage(Name + " distance: " + distance.ToString("0.00"), 4);
             }
 
             if (vehicle != null && vehicle.Speed < MinSpeed) {
@@ -146,10 +147,10 @@ namespace BepMod
             
             if (inRange && !triggeredInside) {
                 triggeredInside = true;
-                OnParticipantInsideRadius(EventArgs.Empty);
+                OnActorInsideRadius(EventArgs.Empty);
             } else if (!inRange && triggeredInside) {
                 triggeredInside = false;
-                OnParticipantOutsideRadius(EventArgs.Empty);
+                OnActorOutsideRadius(EventArgs.Empty);
             }
         }
     }

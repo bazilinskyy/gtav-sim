@@ -24,8 +24,8 @@ namespace BepMod
                     new Vector3(-993.0f, -1260.9f, 5.3f)
             };
 
-            //startPosition = points[0]; startHeading = 315.0f;
-            startPosition = points[2]; startHeading = 270.0f;
+            startPosition = points[0]; startHeading = 315.0f;
+            //startPosition = points[2]; startHeading = 270.0f;
             //startPosition = points[5]; startHeading = 30.0f;
             //startPosition = new Vector3(-1117.6f, -1532.5f, 3.9f); startHeading = 30.0f;
             //startPosition = points[6]; startHeading = 30.0f;
@@ -36,52 +36,59 @@ namespace BepMod
         public override void PostRun() {
             Log("Scenario1.PostRun()");
 
-            Participant p1 = AddParticipant(
-                location: new Location(-1076.1f, -1599.3f, 4.0f, 210.0f),
+            Actor p1 = AddActor(
+                position: new Vector3(-1076.1f, -1599.3f, 4.0f),
+                heading: 210.0f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Participant 1"
+                name: "Actor 1"
             );
 
-            Participant p2 = AddParticipant(
-                location: new Location(-1007.5f, -1636.3f, 4.0f, 58.1f),
+            Actor p2 = AddActor(
+                position: new Vector3(-1007.5f, -1636.3f, 4.0f),
+                heading: 58.1f,
                 radius: 7.5f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Participant 2"
+                name: "Actor 2"
             );
 
-            Participant p3 = AddParticipant(
-                location: new Location(-983.4f, -1537.3f, 4.6f, 112.0f),
+            Actor p3 = AddActor(
+                position: new Vector3(-983.4f, -1537.3f, 4.6f),
+                heading: 112.0f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Participant 3"
+                name: "Actor 3"
             );
 
-            Participant p4 = AddParticipant(
-                location: new Location(-1065.6f, -1471.1f, 4.6f, 120.2f),
+            Actor p4 = AddActor(
+                position: new Vector3(-1065.6f, -1471.1f, 4.6f),
+                heading: 120.2f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Participant 4"
+                name: "Actor 4"
             );
 
-            Participant p5 = AddParticipant(
-                location: new Location(-1091.9f, -1557.8f, 3.9f, 23.0f),
+            Actor p5 = AddActor(
+                position: new Vector3(-1091.9f, -1557.8f, 3.9f),
+                heading: 23.0f,
                 pedHash: PedHash.Brad,
-                name: "Participant 5"
+                name: "Actor 5"
             );
 
-            Participant p61 = AddParticipant(
-                location: new Location(-1116.7f, -1468.5f, 4.5f, 127.5f),
+            Actor p61 = AddActor(
+                position: new Vector3(-1116.7f, -1468.5f, 4.5f),
+                heading: 127.5f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Participant 6.1"
+                name: "Actor 6.1"
             );
-            Participant p62 = AddParticipant(
-                location: new Location(-1181.5f, -1449.4f, 3.9f, 210.7f),
+            Actor p62 = AddActor(
+                position: new Vector3(-1181.5f, -1449.4f, 3.9f),
+                heading: 210.7f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie,
-                name: "Participant 6.2"
+                name: "Actor 6.2"
             );
 
 
@@ -110,10 +117,10 @@ namespace BepMod
 
             // Event 2
             Vehicle[] parked2 = {
-                AddParkedVehicle(new Location(-1009.4f, -1639.4f, 4.0f, 63.4f)),
-                AddParkedVehicle(new Location(-1014.5f, -1645.5f, 3.9f, 29.7f)),
-                AddParkedVehicle(new Location(-1011.4f, -1643.2f, 3.9f, 50.6f)),
-                AddParkedVehicle(new Location(-1006.1f, -1633.0f, 4.1f, 242.2f))
+                AddParkedVehicle(new Vector3(-1009.4f, -1639.4f, 4.0f), 63.4f),
+                AddParkedVehicle(new Vector3(-1014.5f, -1645.5f, 3.9f), 29.7f),
+                AddParkedVehicle(new Vector3(-1011.4f, -1643.2f, 3.9f), 50.6f),
+                AddParkedVehicle(new Vector3(-1006.1f, -1633.0f, 4.1f), 242.2f)
             };
 
             Trigger t2 = AddTrigger(
@@ -270,15 +277,17 @@ namespace BepMod
 
 
             // Event 7
-            Participant p71 = AddParticipant(
-                new Location(-1166.0f, -1458.9f, 3.8f, 33.3f),
+            Actor p71 = AddActor(
+                new Vector3(-1166.0f, -1458.9f, 3.8f),
+                heading: 33.3f,
                 radius: 5.0f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie
             );
 
-            Participant p72 = AddParticipant(
-                new Location(-1176.7f, -1441.2f, 3.8f, 215.2f),
+            Actor p72 = AddActor(
+                new Vector3(-1176.7f, -1441.2f, 3.8f),
+                heading: 215.2f,
                 radius: 5.0f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie
@@ -291,7 +300,7 @@ namespace BepMod
             );
 
 
-            p71.ParticipantInsideRadius += (sender, e) => {
+            p71.ActorInsideRadius += (sender, e) => {
                 p71.vehicle.OpenDoor(
                     VehicleDoor.FrontLeftDoor,
                     false,
@@ -312,8 +321,9 @@ namespace BepMod
 
 
             // Event 8
-            Participant p81 = AddParticipant(
-                new Location(-1205.8f, -1448.1f, 3.9f, 304.8f),
+            Actor p81 = AddActor(
+                new Vector3(-1205.8f, -1448.1f, 3.9f),
+                heading: 304.8f,
                 radius: 5.0f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Prairie
@@ -374,7 +384,7 @@ namespace BepMod
             };
 
 
-            //new Location(-1064.8f, -1339.7f, 4.9f, 345.7f)
+            //new Vector3(-1064.8f, -1339.7f, 4.9f, 345.7f)
 
 
 
