@@ -4,10 +4,12 @@ using GTA.Native;
 
 using static BepMod.Util;
 
-namespace BepMod
+namespace BepMod.Experiment
 {
-    class Scenario1 : Scenario {
-        public Scenario1() {
+    class Scenario1 : Scenario
+    {
+        public Scenario1()
+        {
             Name = "SCENARIO_1";
 
             Points = new Vector3[] {
@@ -36,7 +38,8 @@ namespace BepMod
             //StartPosition = Points[10]; StartHeading = 300.0f;
         }
 
-        public override void PostRun() {
+        public override void PostRun()
+        {
             Log("Scenario1.PostRun()");
 
             Actor p1 = AddActor(
@@ -97,12 +100,13 @@ namespace BepMod
 
             // Event 1
             Trigger t1 = AddTrigger(
-                Points[1], 
-                radius: 7.5f, 
+                Points[1],
+                radius: 7.5f,
                 name: "1"
             );
 
-            t1.TriggerEnter += (sender, index, e) => {
+            t1.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier rechtdoor");
                 gpsSoundStraight.Play();
 
@@ -127,12 +131,13 @@ namespace BepMod
             };
 
             Trigger t2 = AddTrigger(
-                new Vector3(-1014.4f, -1633.5f, 4.2f), 
-                radius: 7.5f, 
+                new Vector3(-1014.4f, -1633.5f, 4.2f),
+                radius: 7.5f,
                 name: "2"
             );
 
-            t2.TriggerEnter += (sender, index, e) => {
+            t2.TriggerEnter += (sender, index, e) =>
+            {
                 p2.vehicle.Speed = 4.0f;
                 p2.ped.Task.DriveTo(
                     p2.vehicle,
@@ -147,12 +152,13 @@ namespace BepMod
 
             // Event 3
             Trigger t3 = AddTrigger(
-                Points[3], 
-                radius: 7.5f, 
+                Points[3],
+                radius: 7.5f,
                 name: "3"
             );
 
-            t3.TriggerEnter += (sender, index, e) => {
+            t3.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier rechtdoor");
                 gpsSoundStraight.Play();
 
@@ -183,7 +189,8 @@ namespace BepMod
                 name: "4"
             );
 
-            t4.TriggerEnter += (sender, index, e) => {
+            t4.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier linksaf", 3000);
                 gpsSoundLeft.Play();
 
@@ -211,7 +218,8 @@ namespace BepMod
                 name: "5_2"
             );
 
-            t51.TriggerEnter += (sender, index, e) => {
+            t51.TriggerEnter += (sender, index, e) =>
+            {
                 p5.ped.Task.FollowPointRoute(
                     new Vector3(-1104.9f, -1534.6f, 4.0f),
                     new Vector3(-1108.4f, -1527.8f, 6.4f)
@@ -220,7 +228,8 @@ namespace BepMod
                 trafficLightsColor = TrafficLightColor.GREEN;
             };
 
-            t52.TriggerEnter += (sender, index, e) => {
+            t52.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier rechtsaf", 3000);
                 gpsSoundRight.Play();
             };
@@ -240,7 +249,8 @@ namespace BepMod
                 name: "6_2"
             );
 
-            t61.TriggerEnter += (sender, index, e) => {
+            t61.TriggerEnter += (sender, index, e) =>
+            {
                 trafficLightsColor = TrafficLightColor.YELLOW;
 
                 p62.ped.Task.DriveTo(
@@ -252,11 +262,13 @@ namespace BepMod
                 );
             };
 
-            t61.TriggerExit += (sender, index, e) => {
+            t61.TriggerExit += (sender, index, e) =>
+            {
                 trafficLightsColor = TrafficLightColor.RED;
             };
 
-            t62.TriggerEnter += (sender, index, e) => {
+            t62.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier rechtdoor", 3000);
                 gpsSoundStraight.Play();
 
@@ -303,7 +315,8 @@ namespace BepMod
             );
 
 
-            p71.ActorInsideRadius += (sender, e) => {
+            p71.ActorInsideRadius += (sender, e) =>
+            {
                 p71.vehicle.OpenDoor(
                     VehicleDoor.FrontLeftDoor,
                     false,
@@ -312,7 +325,8 @@ namespace BepMod
             };
 
 
-            t71.TriggerEnter += (sender, index, e) => {
+            t71.TriggerEnter += (sender, index, e) =>
+            {
                 p72.ped.Task.DriveTo(
                     p72.vehicle,
                     target: Points[5],
@@ -338,7 +352,8 @@ namespace BepMod
                 name: "8_1"
             );
 
-            t81.TriggerEnter += (sender, index, e) => {
+            t81.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier rechtsaf", 3000);
                 gpsSoundRight.Play();
 
@@ -363,7 +378,8 @@ namespace BepMod
                 name: "10_1"
             );
 
-            t101.TriggerEnter += (sender, index, e) => {
+            t101.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier rechtdoor", 3000);
                 gpsSoundStraight.Play();
 
@@ -379,7 +395,8 @@ namespace BepMod
                 name: "11_1"
             );
 
-            t111.TriggerEnter += (sender, index, e) => {
+            t111.TriggerEnter += (sender, index, e) =>
+            {
                 UI.ShowSubtitle("Ga hier linksaf", 3000);
                 gpsSoundLeft.Play();
 

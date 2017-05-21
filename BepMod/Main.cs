@@ -9,10 +9,13 @@ using GTA.Native;
 
 using NativeUI;
 
+using BepMod.Experiment;
 using static BepMod.Util;
 
-namespace BepMod {
-    public class Main : Script {
+namespace BepMod
+{
+    public class Main : Script
+    {
         private Scenario ActiveScenario;
         private List<Scenario> scenarios = new List<Scenario>();
         private int scenariosCount = 0;
@@ -24,7 +27,8 @@ namespace BepMod {
         private SmartEye smartEye = new SmartEye();
         private DataLog dataLog;
 
-        public Main() {
+        public Main()
+        {
             Log("Main.Main()");
 
             dataLog = new DataLog(smartEye);
@@ -34,7 +38,8 @@ namespace BepMod {
 
             menu = new UIMenu("BepMod", "");
 
-            foreach(Scenario scenario in scenarios) {
+            foreach (Scenario scenario in scenarios)
+            {
                 scenariosCount++;
 
                 UIMenu scenarioSubMenu = menuPool.AddSubMenu(
@@ -50,9 +55,11 @@ namespace BepMod {
                 int pointIndex = 0;
                 int scenarioIndex = scenariosCount - 1;
 
-                scenarioSubMenu.OnItemSelect += (UIMenu sender, UIMenuItem item, int index) => {
+                scenarioSubMenu.OnItemSelect += (UIMenu sender, UIMenuItem item, int index) =>
+                {
                     Log("Dingen: " + index.ToString());
-                    if (index == 0) {
+                    if (index == 0)
+                    {
                         RunScenario(scenarioIndex);
                         menu.Visible = false;
                         scenarioSubMenu.Visible = false;
@@ -60,22 +67,27 @@ namespace BepMod {
                 };
 
                 var pointsList = new List<dynamic> { };
-                for (int i = 0; i < scenario.Points.Length; i++) {
+                for (int i = 0; i < scenario.Points.Length; i++)
+                {
                     pointsList.Add(String.Format("Point {0}", i));
                 }
 
                 UIMenuListItem pointMenuListItem = new UIMenuListItem("Teleport", pointsList, 0);
                 scenarioSubMenu.AddItem(pointMenuListItem);
-                scenarioSubMenu.OnItemSelect += (sender, item, index) => {
-                    if (index == 1) {
+                scenarioSubMenu.OnItemSelect += (sender, item, index) =>
+                {
+                    if (index == 1)
+                    {
                         Vector3 position = scenario.Points[pointIndex];
                         UI.Notify("Teleport to: " + position.ToString());
                         Game.Player.Character.Position = position;
                     }
                 };
 
-                scenarioSubMenu.OnListChange += (sender, item, index) => {
-                    if (item == pointMenuListItem) {
+                scenarioSubMenu.OnListChange += (sender, item, index) =>
+                {
+                    if (item == pointMenuListItem)
+                    {
                         pointIndex = index;
                     }
                 };
@@ -94,13 +106,15 @@ namespace BepMod {
             UIMenuListItem debugLevelMenuItem = new UIMenuListItem("Debug level", debugLevels, debugLevel);
             menu.AddItem(debugLevelMenuItem);
 
-            menu.OnListChange += (sender, item, index) => {
-                if (item == debugLevelMenuItem) {
+            menu.OnListChange += (sender, item, index) =>
+            {
+                if (item == debugLevelMenuItem)
+                {
                     debugLevel = index;
                     ClearMessages();
                 }
             };
-                
+
             menu.RefreshIndex();
 
             menu.OnItemSelect += Menu_OnItemSelect;
@@ -129,7 +143,8 @@ namespace BepMod {
 
             Game.Player.Character.IsInvincible = true;
 
-            if (Game.IsScreenFadedOut) {
+            if (Game.IsScreenFadedOut)
+            {
                 Game.FadeScreenIn(0);
             }
         }
@@ -141,26 +156,30 @@ namespace BepMod {
             smartEye.Stop();
         }
 
-        ~Main() {
+        ~Main()
+        {
             Log("Main.~Main()");
             smartEye.Stop();
             StopScenario();
             ClearVehiclePool();
             Log("Main.~Main(): shut down complete");
-         }
+        }
 
-        private void DoKeyDown(object sender, System.Windows.Forms.KeyEventArgs e) {
-            if (e.KeyCode == System.Windows.Forms.Keys.B) {
+        private void DoKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.B)
+            {
                 menu.Visible = !menu.Visible;
             }
-            else if (e.KeyCode == System.Windows.Forms.Keys.I) {
+            else if (e.KeyCode == Keys.I)
+            {
                 RunScenario(0);
             }
-            else if (e.KeyCode == System.Windows.Forms.Keys.K)
+            else if (e.KeyCode == Keys.K)
             {
                 StopScenario();
             }
-            else if (e.KeyCode == System.Windows.Forms.Keys.N)
+            else if (e.KeyCode == Keys.N)
             {
                 Vector3 position = Game.Player.Character.Position;
                 float heading = Game.Player.Character.Heading;
@@ -182,14 +201,16 @@ namespace BepMod {
                 thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
                 thread.Start();
                 thread.Join(); //Wait for the thread to end
-            } else if (e.KeyCode == System.Windows.Forms.Keys.Z) {
+            }
+            else if (e.KeyCode == Keys.Z)
+            {
                 Mayhem();
             }
-            else if (e.KeyCode == System.Windows.Forms.Keys.L)
+            else if (e.KeyCode == Keys.L)
             {
                 smartEye.Stop();
             }
-            else if (e.KeyCode == System.Windows.Forms.Keys.O)
+            else if (e.KeyCode == Keys.O)
             {
                 smartEye.Start();
             }
@@ -198,54 +219,71 @@ namespace BepMod {
                 if (debugLevel >= 3)
                 {
                     debugLevel = 0;
-                } else
+                }
+                else
                 {
                     debugLevel++;
                 }
                 ClearMessages();
             }
+            else if (e.KeyCode == Keys.S)
+            {
+                if (Game.Player.Character.IsInVehicle() &&
+                    Game.Player.Character.LastVehicle.Speed < 1.5f)
+                {
+                    Game.Player.Character.LastVehicle.Speed = 0.0f;
+                }
+            }
         }
 
-        public void Mayhem() {
+        public void Mayhem()
+        {
             Vector3 p = Game.Player.Character.Position;
             float h = Game.Player.Character.Heading;
-            
+
             Vehicle v1 = World.CreateVehicle(VehicleHash.Maverick, p + new Vector3(0, 0, 60f), h);
             v1.Speed = 10f;
 
             vehiclePool.Add(v1.Handle);
         }
 
-        public void Menu_OnItemSelect(UIMenu sender, UIMenuItem selectedItem, int index) {
+        public void Menu_OnItemSelect(UIMenu sender, UIMenuItem selectedItem, int index)
+        {
             Log("Menu_OnItemSelect (" + index + ") " + selectedItem.Text);
 
-            if (index == scenariosCount) {
+            if (index == scenariosCount)
+            {
                 StopScenario();
             }
         }
 
-        private void StopScenario() {
+        private void StopScenario()
+        {
             Log("Main.StopScenario()");
-            if (ActiveScenario != null) {
+            if (ActiveScenario != null)
+            {
                 Log("scenario != null");
                 ActiveScenario.Stop();
                 ActiveScenario = null;
             }
         }
 
-        private void RunScenario(int index) {
+        private void RunScenario(int index)
+        {
             Log("Main.RunScenario()");
             StopScenario();
             ActiveScenario = scenarios[index];
             ActiveScenario.Run(dataLog);
         }
 
-        private void Menu_OnCheckboxChange(UIMenu sender, UIMenuCheckboxItem checkboxItem, bool Checked) {
+        private void Menu_OnCheckboxChange(UIMenu sender, UIMenuCheckboxItem checkboxItem, bool Checked)
+        {
             int index = sender.MenuItems.IndexOf(checkboxItem);
         }
 
         bool ticked = false;
-        private void MainTick(object sender, EventArgs e) {
+        private void MainTick(object sender, EventArgs e)
+        {
             menuPool.ProcessMenus();
 
             if (ticked == false)

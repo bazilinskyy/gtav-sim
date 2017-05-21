@@ -240,7 +240,7 @@ namespace BepMod
                         (float)BitConverter.ToDouble(GetData(Data, 42, 8), 0)
                     ),
                     ""
-                    //Encoding.ASCII.GetString(Data, 50, size)
+                //Encoding.ASCII.GetString(Data, 50, size)
                 );
             }
         }

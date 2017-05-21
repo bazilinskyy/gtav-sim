@@ -4,13 +4,14 @@ using System.Drawing;
 using GTA;
 using GTA.Math;
 
-namespace BepMod
+namespace BepMod.Experiment
 {
     // A delegate type for hooking up change notifications.
     public delegate void TriggerEnterEventHandler(object sender, int index, EventArgs e);
     public delegate void TriggerExitEventHandler(object sender, int index, EventArgs e);
 
-    class Trigger : IDisposable {
+    class Trigger : IDisposable
+    {
         public int index;
 
         public float distance;
@@ -29,13 +30,15 @@ namespace BepMod
             Vector3 position,
             float radius = 10.0f,
             String name = ""
-        ) {
+        )
+        {
             triggerPosition = position;
             triggerRadius = radius;
             triggerName = name;
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Log("Trigger.Dispose()");
         }
 
@@ -44,47 +47,57 @@ namespace BepMod
             return String.Format(NameFormat, triggerName);
         }
 
-        protected virtual void OnTriggerEnter(EventArgs e) {
+        protected virtual void OnTriggerEnter(EventArgs e)
+        {
             Log("Entered trigger: " + triggerName);
             if (debugLevel > 0)
             {
                 ShowMessage("Entered trigger: " + triggerName);
             }
 
-            if (TriggerEnter != null) {
+            if (TriggerEnter != null)
+            {
                 TriggerEnter(this, index, e);
             }
         }
 
-        protected virtual void OnTriggerExit(EventArgs e) {
+        protected virtual void OnTriggerExit(EventArgs e)
+        {
             Log("Exited trigger: " + triggerName);
-            if (debugLevel > 0) {
+            if (debugLevel > 0)
+            {
                 ShowMessage("Exited trigger: " + triggerName);
             }
 
-            if (TriggerExit != null) {
+            if (TriggerExit != null)
+            {
                 TriggerExit(this, index, e);
             }
         }
 
-        public virtual void DoTick() {
+        public virtual void DoTick()
+        {
             Vector3 playerPos = Game.Player.Character.Position;
 
             distance = triggerPosition.DistanceTo(playerPos);
             bool inside = distance < triggerRadius;
 
-            if (debugLevel > 2) {
+            if (debugLevel > 2)
+            {
                 RenderCircleOnGround(
-                    triggerPosition, 
-                    triggerRadius, 
+                    triggerPosition,
+                    triggerRadius,
                     inside ? Color.Green : Color.Red
                 );
             }
 
-            if (inside && !triggeredInside) {
+            if (inside && !triggeredInside)
+            {
                 triggeredInside = true;
                 OnTriggerEnter(EventArgs.Empty);
-            } else if (!inside && triggeredInside) {
+            }
+            else if (!inside && triggeredInside)
+            {
                 triggeredInside = false;
                 OnTriggerExit(EventArgs.Empty);
             }

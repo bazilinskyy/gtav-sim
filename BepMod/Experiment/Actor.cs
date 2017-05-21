@@ -7,7 +7,7 @@ using GTA.Native;
 
 using static BepMod.Util;
 
-namespace BepMod
+namespace BepMod.Experiment
 {
     // A delegate type for hooking up change notifications.
     public delegate void ActorInsideRadiusEventHandler(object sender, EventArgs e);
@@ -18,7 +18,8 @@ namespace BepMod
     /// <remarks>
     /// Available events: InsideRadius, OutsideRadius, 
     /// </remarks>
-    class Actor : IDisposable {
+    class Actor : IDisposable
+    {
         public float distance;
 
         public String Name;
@@ -36,7 +37,7 @@ namespace BepMod
 
         public float triggerRadius;
         public bool triggeredInside = false;
-        
+
         public Actor(
             Vector3 position,
             float heading,
@@ -44,31 +45,33 @@ namespace BepMod
             PedHash pedHash = default(PedHash),
             VehicleHash vehicleHash = default(VehicleHash),
             String name = ""
-        ) {
+        )
+        {
             triggerRadius = radius;
             Name = name;
 
-            if (vehicleHash != default(VehicleHash)) {
+            if (vehicleHash != default(VehicleHash))
+            {
                 vehicle = World.CreateVehicle(vehicleHash, position, heading);
 
                 vehicle.PlaceOnGround();
                 vehicle.IsInvincible = true;
                 vehicle.CanBeVisiblyDamaged = false;
-                vehicle.SetDoorBreakable(VehicleDoor.FrontLeftDoor, false);
-                vehicle.SetDoorBreakable(VehicleDoor.FrontRightDoor, false);
 
                 vehicleHandle = vehicle.Handle;
 
                 vehiclePool.Add(vehicle.Handle);
             }
 
-            if (pedHash != default(PedHash)) {
+            if (pedHash != default(PedHash))
+            {
                 ped = World.CreatePed(pedHash, position, heading);
 
                 ped.CanBeDraggedOutOfVehicle = false;
                 ped.IsInvincible = true;
 
-                if (vehicle != null) {
+                if (vehicle != null)
+                {
                     ped.SetIntoVehicle(vehicle, VehicleSeat.Driver);
                 }
 
@@ -78,14 +81,17 @@ namespace BepMod
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Log("Actor.Dispose()");
-            if (ped != null && ped.Exists()) {
+            if (ped != null && ped.Exists())
+            {
                 try { ped.Delete(); }
                 catch { }
             }
 
-            if (vehicle != null && vehicle.Exists()) {
+            if (vehicle != null && vehicle.Exists())
+            {
                 try { vehicle.Delete(); }
                 catch { }
             }
@@ -103,52 +109,67 @@ namespace BepMod
             get { return (vehicle != null) ? (vehicle.Position) : (ped.Position); }
         }
 
-        protected virtual void OnActorInsideRadius(EventArgs e) {
+        public Vector3 Velocity {
+            get { return (vehicle != null) ? (vehicle.Velocity) : (ped.Velocity); }
+        }
+
+        protected virtual void OnActorInsideRadius(EventArgs e)
+        {
             Log("Actor inside radius: " + Name);
-            if (debugLevel > 0) {
+            if (debugLevel > 0)
+            {
                 ShowMessage("Actor inside radius: " + Name);
             }
 
-            if (ActorInsideRadius != null) {
+            if (ActorInsideRadius != null)
+            {
                 ActorInsideRadius(this, e);
             }
         }
 
-        protected virtual void OnActorOutsideRadius(EventArgs e) {
+        protected virtual void OnActorOutsideRadius(EventArgs e)
+        {
             Log("Actor outside radius: " + Name);
             if (debugLevel > 0)
             {
                 ShowMessage("Actor outside radius: " + Name);
             }
 
-            if (ActorOutsideRadius != null) {
+            if (ActorOutsideRadius != null)
+            {
                 ActorOutsideRadius(this, e);
             }
         }
 
-        public virtual void DoTick() {
+        public virtual void DoTick()
+        {
             Vector3 playerPos = Game.Player.Character.Position;
             Vector3 actorPos = Position;
 
             distance = Position.DistanceTo(playerPos);
             bool inRange = distance < triggerRadius;
 
-            if (vehicle != null && vehicle.Speed < MinSpeed) {
+            if (vehicle != null && vehicle.Speed < MinSpeed)
+            {
                 vehicle.Speed = MinSpeed;
             }
-            
-            if (debugLevel > 2) {
+
+            if (debugLevel > 2)
+            {
                 RenderCircleOnGround(
-                    Position, 
-                    triggerRadius, 
+                    Position,
+                    triggerRadius,
                     inRange ? Color.Green : Color.Red
                 );
             }
-            
-            if (inRange && !triggeredInside) {
+
+            if (inRange && !triggeredInside)
+            {
                 triggeredInside = true;
                 OnActorInsideRadius(EventArgs.Empty);
-            } else if (!inRange && triggeredInside) {
+            }
+            else if (!inRange && triggeredInside)
+            {
                 triggeredInside = false;
                 OnActorOutsideRadius(EventArgs.Empty);
             }

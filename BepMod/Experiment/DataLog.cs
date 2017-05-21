@@ -9,7 +9,7 @@ using GTA.Math;
 
 using static BepMod.Util;
 
-namespace BepMod
+namespace BepMod.Experiment
 {
     class DataLog
     {
@@ -55,7 +55,9 @@ namespace BepMod
             "GazeRayResult.HitEntity.Handle",
             "GazingAtActor",
             "GazeActor",
-            "GazeActor.Position",
+            "GazeActor.Position.X",
+            "GazeActor.Position.Y",
+            "GazeActor.Position.Z",
             "ActiveTriggers",
             "ActorsInRange"
         );
@@ -131,15 +133,15 @@ namespace BepMod
                     GazeRayResult.HitCoords.Z,
 
                     GazeRayResult.DitHitEntity,
-                    GazeRayResult.DitHitEntity 
+                    GazeRayResult.DitHitEntity
                         ? EscapeCSV(GazeRayResult.HitEntity.Handle.ToString()) :
                         "",
 
                     GazeActor != null,
                     GazeActor,
-                    (GazeActor != null) 
-                        ? EscapeCSV(GazeActor.Position.ToString())
-                        : "",
+                    (GazeActor != null) ? GazeActor.Position.X.ToString() : "",
+                    (GazeActor != null) ? GazeActor.Position.Y.ToString() : "",
+                    (GazeActor != null) ? GazeActor.Position.Z.ToString() : "",
 
                     EscapeCSV(String.Join(",", ActiveTriggers)),
                     EscapeCSV(String.Join(",", ActorsInRange))
@@ -181,7 +183,7 @@ namespace BepMod
 
             return e;
         }
-        
+
         public void WriteEntry(Entry e)
         {
             Writer.WriteLine(e.ToCSV());
@@ -287,8 +289,8 @@ namespace BepMod
             StartTime = DateTime.Now;
 
             Writer = File.CreateText(
-                Path.Combine(BasePath, 
-                    String.Format(DateLogNameFormat, 
+                Path.Combine(BasePath,
+                    String.Format(DateLogNameFormat,
                         StartTime.ToString(DateLogDateTimeFormat),
                         Name
                     )));
@@ -311,7 +313,6 @@ namespace BepMod
                 Writer = null;
 
                 Running = false;
-                Name = "";
 
                 ClearMessages();
             }
