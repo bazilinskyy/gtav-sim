@@ -19,15 +19,15 @@ namespace BepMod
 
         public void DoTick()
         {
-            //if (!string.IsNullOrEmpty(status))
-            //{
-            //    Log("SmartEye: " + status);
-            //    if (debugLevel > 0)
-            //    {
-            //        ShowMessage(status);
-            //    }
-            //    status = "";
-            //}
+            if (!string.IsNullOrEmpty(status))
+            {
+                Log("SmartEye: " + status);
+                if (debugLevel > 0)
+                {
+                    ShowMessage(status, 1);
+                }
+                status = "";
+            }
         }
 
         public Packet lastPacket = new Packet();

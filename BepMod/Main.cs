@@ -101,11 +101,6 @@ namespace BepMod {
                 }
             };
                 
-            menu.AddItem(new UIMenuCheckboxItem("Show location", false, ""));
-            menu.AddItem(new UIMenuCheckboxItem("Show target object", false, ""));
-            menu.AddItem(new UIMenuItem("Remove all vehicles", ""));
-            menu.AddItem(new UIMenuItem("Remove all pedestrians", ""));
-
             menu.RefreshIndex();
 
             menu.OnItemSelect += Menu_OnItemSelect;
@@ -226,12 +221,6 @@ namespace BepMod {
 
             if (index == scenariosCount) {
                 StopScenario();
-            } else if (index == (scenariosCount + 4)) {
-                ClearVehiclePool();
-                DoRemoveVehicles();
-            } else if (index == (scenariosCount + 5)) {
-                ClearPedPool();
-                DoRemovePeds();
             }
         }
 
@@ -259,21 +248,25 @@ namespace BepMod {
         private void MainTick(object sender, EventArgs e) {
             menuPool.ProcessMenus();
 
-            if (ticked == false) {
+            if (ticked == false)
+            {
                 ticked = true;
-                try {
+                try
+                {
                     smartEye.Start();
                     RunScenario(0);
-                } catch {}
+                }
+                catch { }
+            }
+
+            if (ActiveScenario != null)
+            {
+                ActiveScenario.DoTick();
             }
 
             smartEye.DoTick();
             dataLog.DoTick();
             Util.DoTick();
-
-            if (ActiveScenario != null) {
-                ActiveScenario.DoTick();
-            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace BepMod {
     enum TrafficLightColor { GREEN = 0, RED, YELLOW, AUTO }
 
     static class Util {
-        public static int debugLevel = 2;
+        public static int debugLevel = 0;
 
         public static String[] messages = new String[30];
 
@@ -46,9 +46,12 @@ namespace BepMod {
         public static void DoTick() {
             ShowMessages();
 
-            if (trafficLightsColor != TrafficLightColor.AUTO) {
-                foreach (Prop prop in World.GetNearbyProps(Game.Player.Character.Position, 100.0f)) {
-                    if (trafficSignalHashes.Contains(prop.Model.Hash)) {
+            if (trafficLightsColor != TrafficLightColor.AUTO)
+            {
+                foreach (Prop prop in World.GetNearbyProps(Game.Player.Character.Position, 100.0f))
+                {
+                    if (trafficSignalHashes.Contains(prop.Model.Hash))
+                    {
                         Function.Call(Hash.SET_ENTITY_TRAFFICLIGHT_OVERRIDE, prop, (int)trafficLightsColor);
                     }
                 }
@@ -74,24 +77,24 @@ namespace BepMod {
         {
             for (int i = 0; i < messages.Length; i++)
             {
-                ShowMessage("", i);
+                ShowMessage(null, i);
             }
         }
 
         public static void ShowMessage(string message = null, int index = 0) {
-            messages[index] = message;
+            messages[index] = string.IsNullOrEmpty(message) ? null : message;
         }
 
         public static void ShowMessages() {
             for (int i = 0; i < messages.Length; i++) {
                 String message = messages[i];
-                UIText messageHandle = GetMessageHandle(i);
 
-                if (message != null) {
+                if (!string.IsNullOrEmpty(message)) {
+                    UIText messageHandle = GetMessageHandle(i);
+
                     messageHandle.Caption = message;
+                    messageHandle.Draw();
                 }
-
-                messageHandle.Draw();
             }
         }
 

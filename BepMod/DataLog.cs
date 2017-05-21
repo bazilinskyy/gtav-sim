@@ -27,10 +27,10 @@ namespace BepMod
         public DateTime StartTime;
         public StreamWriter Writer;
         public string BasePath = "BepModLog";
-        public string DateLogNameFormat = "test.csv";
+        public string DateLogNameFormat = "{0}--{1}.csv";
         public string DateLogDateTimeFormat = "yyyy-MM-dd--HH-mm-ss";
 
-        private int ShowEntryStartIndex = 1;
+        private int ShowEntryStartIndex = 2;
 
         private string CSVHeader = String.Join(",",
             "Index",
@@ -288,7 +288,10 @@ namespace BepMod
 
             Writer = File.CreateText(
                 Path.Combine(BasePath, 
-                    String.Format(DateLogNameFormat, StartTime.ToString(DateLogDateTimeFormat))));
+                    String.Format(DateLogNameFormat, 
+                        StartTime.ToString(DateLogDateTimeFormat),
+                        Name
+                    )));
 
             Writer.AutoFlush = true;
 

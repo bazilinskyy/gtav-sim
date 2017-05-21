@@ -130,6 +130,8 @@ namespace BepMod {
 
             PostRun();
 
+            vehicle.Speed = 0;
+
             UI.Notify("Scenario loaded");
         }
 
