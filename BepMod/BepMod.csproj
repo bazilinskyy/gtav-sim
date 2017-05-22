@@ -41,16 +41,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NativeUI">
-      <HintPath>scripts\NativeUI.dll</HintPath>
+      <HintPath>..\..\scripts\NativeUI.dll</HintPath>
     </Reference>
     <Reference Include="ScriptHookVDotNet">
       <HintPath>..\..\ScriptHookVDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>..\external\SharpDX-SDK-3.1.0\Bin\Desktop\SharpDX.dll</HintPath>
+      <HintPath>..\..\scripts\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>..\external\SharpDX-SDK-3.1.0\Bin\Desktop\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\..\scripts\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

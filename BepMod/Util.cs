@@ -13,7 +13,7 @@ namespace BepMod
 
     static class Util
     {
-        public static int debugLevel = 0;
+        public static int debugLevel = 2;
 
         public static String[] messages = new String[30];
 
@@ -38,13 +38,17 @@ namespace BepMod
 
         public static void Log(string message, string name = "general")
         {
-            using (StreamWriter w = File.AppendText(String.Format("bepmod_{0}.log", name)))
+            try
             {
-                w.WriteLine("[{0}] {1}",
-                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    message
-                );
+                using (StreamWriter w = File.AppendText(String.Format("bepmod_{0}.log", name)))
+                {
+                    w.WriteLine("[{0}] {1}",
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        message
+                    );
+                }
             }
+            catch { }
         }
 
         public static void DoTick()

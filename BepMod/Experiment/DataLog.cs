@@ -21,6 +21,8 @@ namespace BepMod.Experiment
 
         private List<Entry> entries = new List<Entry>();
 
+        private Entry PreviousEntry = new Entry();
+
         public Scenario ActiveScenario;
         public SmartEye smartEye;
 
@@ -47,6 +49,8 @@ namespace BepMod.Experiment
             "ParticipantSpeed",
             "GazeScreenCoords.X",
             "GazeScreenCoords.Y",
+            "FilteredGazeScreenCoords.X",
+            "FilteredGazeScreenCoords.Y",
             "GazeRayResult.DitHitAnything",
             "GazeRayResult.HitCoords.X",
             "GazeRayResult.HitCoords.Y",
@@ -76,9 +80,11 @@ namespace BepMod.Experiment
             public Scenario Scenario;
 
             // SmartEye Data
-            //public SmartEye.Packet Packet; // maybe? save all received info?
+            public SmartEye.WorldIntersection WorldIntersection; // maybe? save all received info?
             public UInt64 FrameNumber;
+            public Vector2 PreviousGazeScreenCoords;
             public Vector2 GazeScreenCoords;
+            public Vector2 FilteredGazeScreenCoords;
 
 
             // GTA participant details
@@ -126,6 +132,8 @@ namespace BepMod.Experiment
 
                     GazeScreenCoords.X,
                     GazeScreenCoords.Y,
+                    FilteredGazeScreenCoords.X,
+                    FilteredGazeScreenCoords.Y,
 
                     GazeRayResult.DitHitAnything,
                     GazeRayResult.HitCoords.X,
@@ -159,15 +167,19 @@ namespace BepMod.Experiment
 
             e.Scenario = ActiveScenario;
 
+            e.WorldIntersection = smartEye.lastClosestWorldIntersection;
             e.FrameNumber = smartEye.lastFrameNumber;
+
+            e.PreviousGazeScreenCoords = PreviousEntry.GazeScreenCoords;
             e.GazeScreenCoords = GetScreenCoords(smartEye.lastClosestWorldIntersection);
+            e.FilteredGazeScreenCoords = GetFilteredScreenCoords(e.PreviousGazeScreenCoords, e.GazeScreenCoords);
 
             e.ParticipantPosition = Game.Player.Character.Position;
             e.ParticipantSpeed = ActiveScenario.vehicle.Speed;
             e.ParticipantHeading = Game.Player.Character.Heading;
             e.ParticipantCameraRotation = GameplayCamera.Rotation;
 
-            e.GazeRayResult = GetGazeRay(e.GazeScreenCoords);
+            e.GazeRayResult = GetGazeRay(e.FilteredGazeScreenCoords);
 
             if (e.GazeRayResult.DitHitEntity)
             {
@@ -193,6 +205,13 @@ namespace BepMod.Experiment
         {
             int i = ShowEntryStartIndex;
 
+            string gazeObject = "";
+            SmartEye.WorldIntersection wi = e.WorldIntersection;
+            if (wi.ObjectPoint != null)
+            {
+                gazeObject = wi.ObjectPoint.ToString();
+            }
+
             ShowMessage("Entry (" + e.Index + ")", i++);
             ShowMessage("- Tick: " + e.Tick, i++);
             ShowMessage("- FrameNumber: " + e.FrameNumber, i++);
@@ -202,7 +221,10 @@ namespace BepMod.Experiment
             ShowMessage("- ParticipantHeading: " + e.ParticipantHeading, i++);
             ShowMessage("- ParticipantSpeed: " + e.ParticipantSpeed, i++);
             ShowMessage("- ParticipantCameraRotation: " + e.ParticipantCameraRotation, i++);
+            ShowMessage("- GazeObject: " + gazeObject, i++);
+            ShowMessage("- PreviousGazeScreenCoords: " + e.PreviousGazeScreenCoords, i++);
             ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
+            ShowMessage("- FilteredGazeScreenCoords: " + e.FilteredGazeScreenCoords, i++);
             ShowMessage("- GazeRayResult Hit: " + e.GazeRayResult.DitHitAnything, i++);
             ShowMessage("- GazeRayResult Entity: " + e.GazeRayResult.HitEntity, i++);
             ShowMessage("- GazeActor: " + e.GazeActor, i++);
@@ -222,8 +244,8 @@ namespace BepMod.Experiment
         {
             UIRectangle et = new UIRectangle(
                 new Point(
-                    (int)(((e.GazeScreenCoords.X + 1) / 2) * UI.WIDTH),
-                    (int)(((e.GazeScreenCoords.Y + 1) / 2) * UI.HEIGHT)
+                    (int)(((e.FilteredGazeScreenCoords.X + 1) / 2) * UI.WIDTH),
+                    (int)(((e.FilteredGazeScreenCoords.Y + 1) / 2) * UI.HEIGHT)
                 ),
                 new Size(new Point(15, 15)),
                 Color.FromArgb(127, Color.Yellow)
@@ -242,10 +264,27 @@ namespace BepMod.Experiment
 
         public Vector2 GetScreenCoords(SmartEye.WorldIntersection worldIntersection)
         {
+            return GetScreenCoords(new Vector2(
+                worldIntersection.ObjectPoint.X,
+                worldIntersection.ObjectPoint.Y
+            ));
+        }
+
+        public Vector2 GetScreenCoords(Vector2 P)
+        {
             return new Vector2(
-                worldIntersection.ObjectPoint.X / UI.WIDTH,
-                worldIntersection.ObjectPoint.Y / UI.HEIGHT
+                P.X / 1920,
+                P.Y / 1200
             ) * 2 - new Vector2(1, 1);
+        }
+
+        public Vector2 GetFilteredScreenCoords(Vector2 source, Vector2 target)
+        {
+            return Vector2.Lerp(
+                source,
+                target,
+                0.3f
+            );
         }
 
         public RaycastResult GetGazeRay(Vector2 screenCoords)
@@ -335,6 +374,13 @@ namespace BepMod.Experiment
                 {
                     ShowEntryGaze(e);
                 }
+                PreviousEntry = e;
+
+                //if (e.GazeRayResult.DitHitEntity)
+                //{
+                //    e.GazeRayResult.HitEntity.ApplyForceRelative(new Vector3(0, 0, 1));
+                //    e.GazeRayResult.HitEntity.ApplyForce(GameplayCamera.Direction.Normalized);
+                //}
             }
         }
     }
