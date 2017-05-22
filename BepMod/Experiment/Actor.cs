@@ -83,7 +83,6 @@ namespace BepMod.Experiment
 
         public void Dispose()
         {
-            Log("Actor.Dispose()");
             if (ped != null && ped.Exists())
             {
                 try { ped.Delete(); }

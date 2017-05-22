@@ -41,7 +41,6 @@ namespace BepMod.Experiment
 
         public void Dispose()
         {
-            Log("Trigger.Dispose()");
         }
 
         override public string ToString()

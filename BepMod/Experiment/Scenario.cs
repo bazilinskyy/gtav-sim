@@ -64,6 +64,8 @@ namespace BepMod.Experiment
         public virtual void Run(DataLog dataLog)
         {
             stopwatch = new Stopwatch();
+            stopwatch.Stop();
+
             Logger = dataLog;
 
             Log("Scenario.Run()");
@@ -174,26 +176,24 @@ namespace BepMod.Experiment
 
         public struct Delay
         {
-            bool Cancelled;
+            public bool Cancelled;
+            //public bool Called;
 
-            Action Callback;
-            Int64 Timeout;
+            public Action Callback;
+            public Int64 Timeout;
 
-            Int64 StartTime;
+            public Int64 StartTime;
 
-            public bool IsCancelled { get => Cancelled; }
+            //public bool IsCancelled { get => Cancelled; }
+            //public bool IsCalled { get => Called; }
 
             public Delay(Action callback, Int64 timeoutMs, Int64 elapsedMs)
             {
                 Cancelled = false;
+                //Called = false;
                 Callback = callback;
                 Timeout = timeoutMs;
                 StartTime = elapsedMs;
-            }
-
-            public bool IsExpired(Int64 ElapsedMilliseconds)
-            {
-                return (ElapsedMilliseconds - StartTime) > Timeout;
             }
 
             public void Cancel()
@@ -201,9 +201,17 @@ namespace BepMod.Experiment
                 Cancelled = true;
             }
 
-            public void Call()
+            public bool IsExpired(Int64 elapsedMs)
             {
-                Callback();
+                return (elapsedMs - StartTime) > Timeout;
+            }
+
+            public void Call(Int64 elapsedMs)
+            {
+                if (!Cancelled && IsExpired(elapsedMs))
+                {
+                    Callback();
+                }
             }
         }
 
@@ -224,6 +232,7 @@ namespace BepMod.Experiment
         {
             if (Running)
             {
+                Int64 elapsedMs = stopwatch.ElapsedMilliseconds;
                 World.CurrentDayTime = new TimeSpan(12, 0, 0);
 
                 Game.Player.Character.Health = 100;
@@ -233,16 +242,13 @@ namespace BepMod.Experiment
 
                 foreach (Delay delay in delays)
                 {
-                    if (delay.IsCancelled)
+                    if (delay.IsExpired(elapsedMs))
                     {
-                        delays.Remove(delay);
-                    }
-                    else if (delay.IsExpired(stopwatch.ElapsedMilliseconds))
-                    {
-                        delay.Call();
-                        delays.Remove(delay);
+                        delay.Call(elapsedMs);
                     }
                 }
+                
+                delays.RemoveAll(x => x.Cancelled || x.IsExpired(elapsedMs));
 
                 foreach (Actor actor in actors)
                 {
@@ -266,6 +272,7 @@ namespace BepMod.Experiment
 
             Running = false;
 
+            delays.Clear();
             ClearTriggers();
             ClearActors();
             ClearVehiclePool();
