@@ -65,8 +65,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Experiment\DataLog.cs" />
-    <Compile Include="SmartEye.cs" />
+    <Compile Include="Data\Logger.cs" />
+    <Compile Include="Data\SmartEye.cs" />
     <Compile Include="Gta5EyeTracking\CameraHelper.cs" />
     <Compile Include="Gta5EyeTracking\Geometry.cs" />
     <Compile Include="Gta5EyeTracking\Mathf.cs" />

@@ -11,11 +11,15 @@ using System.Threading;
 
 using static BepMod.Util;
 
-namespace BepMod
+namespace BepMod.Data
 {
     class SmartEye
     {
         public string status = "";
+        //private List<Vector2> coords = new List<Vector2>();
+        private List<Vector2> _smoothedCoords = new List<Vector2>();
+        public Vector2 Coords = new Vector2(0, 0);
+        public Vector2 SmoothedCoords = new Vector2(0, 0);
 
         public void DoTick()
         {
@@ -49,7 +53,11 @@ namespace BepMod
             var range = Enumerable.Range(startingAtPort, maxNumberOfPortsToCheck);
             var portsInUse =
                 from p in range
-                join used in System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners()
+                join used in System.Net
+                                   .NetworkInformation
+                                   .IPGlobalProperties
+                                   .GetIPGlobalProperties()
+                                   .GetActiveUdpListeners()
             on p equals used.Port
                 select p;
 
@@ -137,6 +145,7 @@ namespace BepMod
                             else if (subPacket.Id == 64)
                             {
                                 lastClosestWorldIntersection = subPacket.GetWorldIntersection();
+                                ProcessScreenWorldIntersection(lastClosestWorldIntersection);
                             }
                         }
                     }
@@ -282,6 +291,59 @@ namespace BepMod
 
                 return new SubPacket();
             }
+        }
+
+        private void ProcessScreenWorldIntersection(WorldIntersection worldIntersection)
+        {
+            Vector3 objectPoint = worldIntersection.ObjectPoint;
+            Coords = GetScreenCoordsFromPoint(objectPoint);
+            SmoothedCoords = GetSmoothedCoords(Coords);
+            _smoothedCoords.Add(SmoothedCoords);
+        }
+
+        private Vector2 GetScreenCoordsFromPoint(Vector3 point)
+        {
+            return new Vector2(
+                point.X / UI.WIDTH,
+                point.Y / UI.HEIGHT
+            ) * 2 - new Vector2(1, 1);
+        }
+
+        //private int[] weights = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 }; // <3 2^n
+        //private int[] weights = { 1, 1, 2, 2, 4, 4, 8, 16, 16, 16 };
+        //private int[] weights = { 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 }; // <3 fibonacci
+        private int[] weights = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41 }; // <3 primes
+        private Vector2 GetSmoothedCoords(Vector2 coords)
+        {
+            float d = coords.DistanceTo(SmoothedCoords);
+            if (d > 0.1f)
+            {
+                return coords;
+            }
+
+            float x = 0, y = 0;
+            int n = 0;
+
+            int l = Math.Max(0, _smoothedCoords.Count() - weights.Length + 1);
+            int i = 0;
+            int weight = 0;
+
+            var smoothedCoords = _smoothedCoords.Skip(l);
+
+            foreach (Vector2 v in smoothedCoords)
+            {
+                weight = weights[i++];
+                x += v.X * weight;
+                y += v.Y * weight;
+                n += weight;
+            }
+
+            weight = weights[i];
+            x += coords.X * weight;
+            y += coords.Y * weight;
+            n += weight;
+
+            return new Vector2(x / n, y / n);
         }
     }
 }

@@ -45,30 +45,58 @@ const build = pks => {
   return buf.slice(0, pos);
 };
 
-const timeout = 25;
-let x = 0, xd = 1;
-let y = 0, yd = 1;
-const xMargin = uiWidth/2.75;
-const yMargin = uiHeight/2.25;
+// Standard Normal variate using Box-Muller transform.
+function randn_bm() {
+    const u = 1 - Math.random();
+    const v = 1 - Math.random();
+
+    return Math.sqrt(-2.0*Math.log(u))*Math.cos(2.0*Math.PI*v);
+}
+
+// const gazePoints = [
+//   [uiWidth/2, uiHeight/2],
+//   [uiWidth/4, uiHeight/3],
+//   [uiWidth/4, uiHeight/3],
+//   [uiWidth/4, uiHeight/3]
+// ];
+// const gazePointIndex = 0;
+
+const timeout = 5;
+let x = uiWidth/2, xd = 1;
+let y = uiHeight/2, yd = 1;
+const xMargin = uiWidth/4;
+const yMargin = uiHeight/4;
+
+const getNewGazePoint = () => {
+  return [
+    xMargin + Math.random()*(uiWidth-xMargin*2),
+    yMargin + Math.random()*(uiHeight-yMargin*2)
+  ];
+}
 
 const getMessage = () => {
-  x = x + xd * (Math.random() * timeout/10);
-  if (x > uiWidth - xMargin) {
-    xd = -1;
-    x = uiWidth - xMargin;
-  } else if (x < xMargin) {
-    xd = 1;
-    x = xMargin;
+
+  if (frame % 250 === 0) {
+    [x, y] = getNewGazePoint();
   }
 
-  y = y + yd * (Math.random() * timeout/10);
-  if (y > uiHeight - yMargin) {
-    yd = -1;
-    y = uiHeight - yMargin;
-  } else if (y < yMargin) {
-    yd = 1;
-    y = yMargin;
-  }
+  // x = x + xd*(timeout/4);
+  // if (x > uiWidth - xMargin) {
+  //   xd = -1;
+  //   x = uiWidth - xMargin;
+  // } else if (x < xMargin) {
+  //   xd = 1;
+  //   x = xMargin;
+  // }
+
+  // y = y + yd*(timeout/8);
+  // if (y > uiHeight - yMargin) {
+  //   yd = -1;
+  //   y = uiHeight - yMargin;
+  // } else if (y < yMargin) {
+  //   yd = 1;
+  //   y = yMargin;
+  // }
 
   return build([
     [1, 
@@ -80,8 +108,8 @@ const getMessage = () => {
       ['Double', 0],
       ['Double', 0],
       ['Double', 0],
-      ['Double', x],
-      ['Double', y],
+      ['Double', x + randn_bm()*10],
+      ['Double', y + randn_bm()*10],
       ['Double', 0],
       ['String', 'hoi']]
   ])

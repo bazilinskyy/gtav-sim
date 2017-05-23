@@ -12,7 +12,7 @@ using NativeUI;
 using BepMod.Experiment;
 using static BepMod.Util;
 
-namespace BepMod
+namespace BepMod.Data
 {
     public class Main : Script
     {
@@ -25,13 +25,13 @@ namespace BepMod
         private MenuPool menuPool = new MenuPool();
 
         private SmartEye smartEye = new SmartEye();
-        private DataLog dataLog;
+        private Logger dataLog;
 
         public Main()
         {
             Log("Main.Main()");
 
-            dataLog = new DataLog(smartEye);
+            dataLog = new Logger(smartEye);
 
             scenarios.Add(new Scenario1());
             // scenarios.Add(new Scenario2());
@@ -98,6 +98,7 @@ namespace BepMod
 
             var debugLevels = new List<dynamic> {
                 "None",
+                "Gaze",
                 "Info",
                 "Verbose",
                 "Full"

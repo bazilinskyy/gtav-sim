@@ -7,11 +7,12 @@ using System.Diagnostics;
 using GTA;
 using GTA.Math;
 
+using BepMod.Experiment;
 using static BepMod.Util;
 
-namespace BepMod.Experiment
+namespace BepMod.Data
 {
-    class DataLog
+    class Logger
     {
         private string Name = "test";
 
@@ -20,6 +21,7 @@ namespace BepMod.Experiment
         private bool Running = false;
 
         private List<Entry> entries = new List<Entry>();
+        private List<Vector2> coords = new List<Vector2>();
 
         private Entry PreviousEntry = new Entry();
 
@@ -49,8 +51,8 @@ namespace BepMod.Experiment
             "ParticipantSpeed",
             "GazeScreenCoords.X",
             "GazeScreenCoords.Y",
-            "FilteredGazeScreenCoords.X",
-            "FilteredGazeScreenCoords.Y",
+            "SmoothedGazeScreenCoords.X",
+            "SmoothedGazeScreenCoords.Y",
             "GazeRayResult.DitHitAnything",
             "GazeRayResult.HitCoords.X",
             "GazeRayResult.HitCoords.Y",
@@ -84,7 +86,7 @@ namespace BepMod.Experiment
             public UInt64 FrameNumber;
             public Vector2 PreviousGazeScreenCoords;
             public Vector2 GazeScreenCoords;
-            public Vector2 FilteredGazeScreenCoords;
+            public Vector2 SmoothedGazeScreenCoords;
 
 
             // GTA participant details
@@ -132,8 +134,8 @@ namespace BepMod.Experiment
 
                     GazeScreenCoords.X,
                     GazeScreenCoords.Y,
-                    FilteredGazeScreenCoords.X,
-                    FilteredGazeScreenCoords.Y,
+                    SmoothedGazeScreenCoords.X,
+                    SmoothedGazeScreenCoords.Y,
 
                     GazeRayResult.DitHitAnything,
                     GazeRayResult.HitCoords.X,
@@ -171,15 +173,15 @@ namespace BepMod.Experiment
             e.FrameNumber = smartEye.lastFrameNumber;
 
             e.PreviousGazeScreenCoords = PreviousEntry.GazeScreenCoords;
-            e.GazeScreenCoords = GetScreenCoords(smartEye.lastClosestWorldIntersection);
-            e.FilteredGazeScreenCoords = GetFilteredScreenCoords(e.PreviousGazeScreenCoords, e.GazeScreenCoords);
+            e.GazeScreenCoords = smartEye.Coords;
+            e.SmoothedGazeScreenCoords = smartEye.SmoothedCoords;
 
             e.ParticipantPosition = Game.Player.Character.Position;
             e.ParticipantSpeed = ActiveScenario.vehicle.Speed;
             e.ParticipantHeading = Game.Player.Character.Heading;
             e.ParticipantCameraRotation = GameplayCamera.Rotation;
 
-            e.GazeRayResult = GetGazeRay(e.FilteredGazeScreenCoords);
+            e.GazeRayResult = GetGazeRay(e.SmoothedGazeScreenCoords);
 
             if (e.GazeRayResult.DitHitEntity)
             {
@@ -224,7 +226,7 @@ namespace BepMod.Experiment
             ShowMessage("- GazeObject: " + gazeObject, i++);
             ShowMessage("- PreviousGazeScreenCoords: " + e.PreviousGazeScreenCoords, i++);
             ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
-            ShowMessage("- FilteredGazeScreenCoords: " + e.FilteredGazeScreenCoords, i++);
+            ShowMessage("- SmoothedGazeScreenCoords: " + e.SmoothedGazeScreenCoords, i++);
             ShowMessage("- GazeRayResult Hit: " + e.GazeRayResult.DitHitAnything, i++);
             ShowMessage("- GazeRayResult Entity: " + e.GazeRayResult.HitEntity, i++);
             ShowMessage("- GazeActor: " + e.GazeActor, i++);
@@ -242,16 +244,26 @@ namespace BepMod.Experiment
 
         public void ShowEntryGaze(Entry e)
         {
-            UIRectangle et = new UIRectangle(
+            UIRectangle es = new UIRectangle(
                 new Point(
-                    (int)(((e.FilteredGazeScreenCoords.X + 1) / 2) * UI.WIDTH),
-                    (int)(((e.FilteredGazeScreenCoords.Y + 1) / 2) * UI.HEIGHT)
+                    (int)(((e.SmoothedGazeScreenCoords.X + 1) / 2) * UI.WIDTH),
+                    (int)(((e.SmoothedGazeScreenCoords.Y + 1) / 2) * UI.HEIGHT)
                 ),
                 new Size(new Point(15, 15)),
-                Color.FromArgb(127, Color.Yellow)
+                Color.FromArgb(150, Color.Red)
+            );
+            es.Draw();
+
+            UIRectangle et = new UIRectangle(
+                new Point(
+                    (int)(((e.GazeScreenCoords.X + 1) / 2) * UI.WIDTH),
+                    (int)(((e.GazeScreenCoords.Y + 1) / 2) * UI.HEIGHT)
+                ),
+                new Size(new Point(10, 10)),
+                Color.FromArgb(150, Color.Yellow)
             );
             et.Draw();
-
+            
             World.DrawMarker(
                 MarkerType.DebugSphere,
                 e.GazeRayResult.HitCoords,
@@ -260,22 +272,6 @@ namespace BepMod.Experiment
                 new Vector3(1, 1, 1),
                 Color.FromArgb(127, Color.White)
             );
-        }
-
-        public Vector2 GetScreenCoords(SmartEye.WorldIntersection worldIntersection)
-        {
-            return GetScreenCoords(new Vector2(
-                worldIntersection.ObjectPoint.X,
-                worldIntersection.ObjectPoint.Y
-            ));
-        }
-
-        public Vector2 GetScreenCoords(Vector2 P)
-        {
-            return new Vector2(
-                P.X / 1920,
-                P.Y / 1200
-            ) * 2 - new Vector2(1, 1);
         }
 
         public Vector2 GetFilteredScreenCoords(Vector2 source, Vector2 target)
@@ -306,14 +302,14 @@ namespace BepMod.Experiment
             return ray;
         }
 
-        public DataLog(SmartEye smartEye)
+        public Logger(SmartEye smartEye)
         {
             this.smartEye = smartEye;
 
             Directory.CreateDirectory(BasePath);
         }
 
-        ~DataLog()
+        ~Logger()
         {
             Stop();
         }
@@ -365,14 +361,17 @@ namespace BepMod.Experiment
             if (Running)
             {
                 Entry e = BuildEntry();
+                entries.Add(e);
+                coords.Add(e.SmoothedGazeScreenCoords);
+
                 WriteEntry(e);
                 if (debugLevel > 0)
                 {
-                    ShowEntry(e);
+                    ShowEntryGaze(e);
                 }
                 if (debugLevel > 1)
                 {
-                    ShowEntryGaze(e);
+                    ShowEntry(e);
                 }
                 PreviousEntry = e;
 

@@ -6,6 +6,7 @@ using GTA;
 using GTA.Math;
 using GTA.Native;
 
+using BepMod.Data;
 using static BepMod.Util;
 
 namespace BepMod.Experiment
@@ -31,7 +32,7 @@ namespace BepMod.Experiment
         public List<Actor> actors = new List<Actor>();
         public List<Trigger> triggers = new List<Trigger>();
 
-        public DataLog Logger;
+        public Logger Logger;
         public Stopwatch stopwatch;
 
         public void Main()
@@ -61,7 +62,7 @@ namespace BepMod.Experiment
         public virtual void PostRun() { }
 
 
-        public virtual void Run(DataLog dataLog)
+        public virtual void Run(Logger dataLog)
         {
             stopwatch = new Stopwatch();
             stopwatch.Stop();
