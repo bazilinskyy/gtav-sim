@@ -318,6 +318,7 @@ namespace BepMod.Data
             float d = coords.DistanceTo(SmoothedCoords);
             if (d > 0.1f)
             {
+                _smoothedCoords.Clear();
                 return coords;
             }
 

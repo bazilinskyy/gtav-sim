@@ -53,14 +53,6 @@ function randn_bm() {
     return Math.sqrt(-2.0*Math.log(u))*Math.cos(2.0*Math.PI*v);
 }
 
-// const gazePoints = [
-//   [uiWidth/2, uiHeight/2],
-//   [uiWidth/4, uiHeight/3],
-//   [uiWidth/4, uiHeight/3],
-//   [uiWidth/4, uiHeight/3]
-// ];
-// const gazePointIndex = 0;
-
 const timeout = 5;
 let x = uiWidth/2, xd = 1;
 let y = uiHeight/2, yd = 1;
@@ -74,29 +66,13 @@ const getNewGazePoint = () => {
   ];
 }
 
+var u = 0;
 const getMessage = () => {
-
-  if (frame % 250 === 0) {
+  u++;
+  if (u === 250) {
+    u = 0;
     [x, y] = getNewGazePoint();
   }
-
-  // x = x + xd*(timeout/4);
-  // if (x > uiWidth - xMargin) {
-  //   xd = -1;
-  //   x = uiWidth - xMargin;
-  // } else if (x < xMargin) {
-  //   xd = 1;
-  //   x = xMargin;
-  // }
-
-  // y = y + yd*(timeout/8);
-  // if (y > uiHeight - yMargin) {
-  //   yd = -1;
-  //   y = uiHeight - yMargin;
-  // } else if (y < yMargin) {
-  //   yd = 1;
-  //   y = yMargin;
-  // }
 
   return build([
     [1, 
