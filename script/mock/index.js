@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
-const Promise = require('bluebird');
+const fs = require('fs');
+const path = require('path');
 const dgram = require('dgram');
+const Promise = require('bluebird');
+const parse = require('csv-parse/lib/sync');
+
+const logFile = 'replay.csv';
 
 const port = process.argv[2] || 5001;
 const host = process.argv[3] || '127.0.0.1';
@@ -11,6 +16,7 @@ const uiHeight = 720;
 const client = Promise.promisifyAll(dgram.createSocket('udp4'));
 
 let frame = 0;
+let data;
 
 const build = pks => {
   let buf = Buffer.alloc(0xffff);
@@ -53,7 +59,7 @@ function randn_bm() {
     return Math.sqrt(-2.0*Math.log(u))*Math.cos(2.0*Math.PI*v);
 }
 
-const timeout = 5;
+const timeout = 16;
 let x = uiWidth/2, xd = 1;
 let y = uiHeight/2, yd = 1;
 const xMargin = uiWidth/4;
@@ -69,9 +75,16 @@ const getNewGazePoint = () => {
 var u = 0;
 const getMessage = () => {
   u++;
-  if (u === 250) {
-    u = 0;
-    [x, y] = getNewGazePoint();
+  if (data) {
+    const r = data[u % data.length];
+
+    x = (parseFloat(r['GazeScreenCoords.X']) / 2 + 0.5) * uiWidth;
+    y = (parseFloat(r['GazeScreenCoords.Y']) / 2 + 0.5) * uiHeight;
+  } else {
+    if (u === 250) {
+      u = 0;
+      [x, y] = getNewGazePoint();
+    }
   }
 
   return build([
@@ -96,8 +109,25 @@ const sendFrame = () => send(getMessage());
 const send = msg =>
   client.sendAsync(msg, 0, msg.length, port, host)
     .then(bytes => {
-      console.log(frame, x, y);
+      if (frame % 100 === 0) {
+        process.stderr.write('.');
+      }
       return setTimeout(sendFrame, timeout);
     });
 
+
+if (logFile) {
+  try {
+    const input = fs.readFileSync(path.join(__dirname, logFile), 'utf-8');
+    process.stdout.write(`Reading log file for replay: ${logFile}\n`);
+    data = parse(
+      input,
+      { columns: true }
+    );
+  } catch (e) {
+    process.stdout.write('Could not read replay file\n');
+  }
+}
+
+process.stdout.write(`Sending data to ${host}:${port}\n`);
 sendFrame();

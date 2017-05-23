@@ -29,8 +29,8 @@ namespace BepMod.Experiment
                 new Vector3(-993.0f, -1260.9f, 5.3f)
             };
 
-            StartPosition = Points[0]; StartHeading = 315.0f;
-            //StartPosition = Points[2]; StartHeading = 270.0f;
+            //StartPosition = Points[0]; StartHeading = 315.0f;
+            StartPosition = Points[2]; StartHeading = 273.0f;
             //StartPosition = Points[5]; StartHeading = 30.0f;
             //StartPosition = new Vector3(-1117.6f, -1532.5f, 3.9f); StartHeading = 30.0f;
             //StartPosition = Points[6]; StartHeading = 30.0f;

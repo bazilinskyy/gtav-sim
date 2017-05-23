@@ -9,6 +9,7 @@ using GTA.Math;
 
 using BepMod.Experiment;
 using static BepMod.Util;
+using System.Globalization;
 
 namespace BepMod.Data
 {
@@ -35,6 +36,8 @@ namespace BepMod.Data
         public string DateLogDateTimeFormat = "yyyy-MM-dd--HH-mm-ss";
 
         private int ShowEntryStartIndex = 2;
+
+        private static NumberFormatInfo nfi = new NumberFormatInfo();
 
         private string CSVHeader = String.Join(",",
             "Index",
@@ -82,12 +85,11 @@ namespace BepMod.Data
             public Scenario Scenario;
 
             // SmartEye Data
-            public SmartEye.WorldIntersection WorldIntersection; // maybe? save all received info?
             public UInt64 FrameNumber;
             public Vector2 PreviousGazeScreenCoords;
             public Vector2 GazeScreenCoords;
             public Vector2 SmoothedGazeScreenCoords;
-
+            
 
             // GTA participant details
             public Vector3 ParticipantPosition;
@@ -121,26 +123,26 @@ namespace BepMod.Data
 
                     Scenario,
 
-                    ParticipantPosition.X,
-                    ParticipantPosition.Y,
-                    ParticipantPosition.Z,
+                    ParticipantPosition.X.ToString(nfi),
+                    ParticipantPosition.Y.ToString(nfi),
+                    ParticipantPosition.Z.ToString(nfi),
 
-                    ParticipantHeading,
+                    ParticipantHeading.ToString(nfi),
 
-                    ParticipantCameraRotation.X,
-                    ParticipantCameraRotation.Z,
+                    ParticipantCameraRotation.X.ToString(nfi),
+                    ParticipantCameraRotation.Z.ToString(nfi),
 
-                    ParticipantSpeed,
+                    ParticipantSpeed.ToString(nfi),
 
-                    GazeScreenCoords.X,
-                    GazeScreenCoords.Y,
-                    SmoothedGazeScreenCoords.X,
-                    SmoothedGazeScreenCoords.Y,
+                    GazeScreenCoords.X.ToString(nfi),
+                    GazeScreenCoords.Y.ToString(nfi),
+                    SmoothedGazeScreenCoords.X.ToString(nfi),
+                    SmoothedGazeScreenCoords.Y.ToString(nfi),
 
                     GazeRayResult.DitHitAnything,
-                    GazeRayResult.HitCoords.X,
-                    GazeRayResult.HitCoords.Y,
-                    GazeRayResult.HitCoords.Z,
+                    GazeRayResult.HitCoords.X.ToString(nfi),
+                    GazeRayResult.HitCoords.Y.ToString(nfi),
+                    GazeRayResult.HitCoords.Z.ToString(nfi),
 
                     GazeRayResult.DitHitEntity,
                     GazeRayResult.DitHitEntity
@@ -149,9 +151,9 @@ namespace BepMod.Data
 
                     GazeActor != null,
                     GazeActor,
-                    (GazeActor != null) ? GazeActor.Position.X.ToString() : "",
-                    (GazeActor != null) ? GazeActor.Position.Y.ToString() : "",
-                    (GazeActor != null) ? GazeActor.Position.Z.ToString() : "",
+                    (GazeActor != null) ? GazeActor.Position.X.ToString(nfi) : "",
+                    (GazeActor != null) ? GazeActor.Position.Y.ToString(nfi) : "",
+                    (GazeActor != null) ? GazeActor.Position.Z.ToString(nfi) : "",
 
                     EscapeCSV(String.Join(",", ActiveTriggers)),
                     EscapeCSV(String.Join(",", ActorsInRange))
@@ -169,7 +171,6 @@ namespace BepMod.Data
 
             e.Scenario = ActiveScenario;
 
-            e.WorldIntersection = smartEye.lastClosestWorldIntersection;
             e.FrameNumber = smartEye.lastFrameNumber;
 
             e.PreviousGazeScreenCoords = PreviousEntry.GazeScreenCoords;
@@ -182,11 +183,19 @@ namespace BepMod.Data
             e.ParticipantCameraRotation = GameplayCamera.Rotation;
 
             e.GazeRayResult = GetGazeRay(e.SmoothedGazeScreenCoords);
-
+            
             if (e.GazeRayResult.DitHitEntity)
             {
-                e.GazeActor = ActiveScenario.FindActorByEntity(
-                    e.GazeRayResult.HitEntity);
+                Actor actor = ActiveScenario.FindActorByEntity(e.GazeRayResult.HitEntity);
+                if (actor != null)
+                {
+                    e.GazeActor = actor;
+                }
+            }
+            
+            if (e.GazeActor == null)
+            {
+                e.GazeActor = GetGazeActor(e.SmoothedGazeScreenCoords, out _);
             }
 
             e.Triggers = ActiveScenario.triggers;
@@ -207,13 +216,6 @@ namespace BepMod.Data
         {
             int i = ShowEntryStartIndex;
 
-            string gazeObject = "";
-            SmartEye.WorldIntersection wi = e.WorldIntersection;
-            if (wi.ObjectPoint != null)
-            {
-                gazeObject = wi.ObjectPoint.ToString();
-            }
-
             ShowMessage("Entry (" + e.Index + ")", i++);
             ShowMessage("- Tick: " + e.Tick, i++);
             ShowMessage("- FrameNumber: " + e.FrameNumber, i++);
@@ -223,7 +225,6 @@ namespace BepMod.Data
             ShowMessage("- ParticipantHeading: " + e.ParticipantHeading, i++);
             ShowMessage("- ParticipantSpeed: " + e.ParticipantSpeed, i++);
             ShowMessage("- ParticipantCameraRotation: " + e.ParticipantCameraRotation, i++);
-            ShowMessage("- GazeObject: " + gazeObject, i++);
             ShowMessage("- PreviousGazeScreenCoords: " + e.PreviousGazeScreenCoords, i++);
             ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
             ShowMessage("- SmoothedGazeScreenCoords: " + e.SmoothedGazeScreenCoords, i++);
@@ -272,6 +273,61 @@ namespace BepMod.Data
                 new Vector3(1, 1, 1),
                 Color.FromArgb(127, Color.White)
             );
+            
+            if (e.GazeActor != null)
+            {
+                World.DrawMarker(
+                    MarkerType.DebugSphere,
+                    e.GazeActor.Position,
+                    Vector3.Zero,
+                    Vector3.Zero,
+                    new Vector3(1, 1, 1),
+                    Color.FromArgb(127, Color.Red)
+                );
+            }
+        }
+
+        public Actor GetGazeActor(Vector2 screenCoords, out Vector3 hitCoords)
+        {
+            var radius = 2;
+            var numPoints = 5;
+            var angleStep = Math.PI * 0.2;
+            var distStep = 0.2 / numPoints;
+            var resultCoord = new Vector3();
+
+            for (var i = 0; i < numPoints; i++)
+            {
+                var angle = i * angleStep;
+                var dist = i * distStep;
+                var offsetX = Math.Sin(angle) * dist;
+                var offsetY = Math.Cos(angle) * dist;
+                var coord = screenCoords + new Vector2((float)offsetX, (float)offsetY);
+                Entity entity;
+                var hitcoord = Gta5EyeTracking.Geometry.RaycastEverything(coord, out entity, radius);
+                if (i == 0)
+                {
+                    resultCoord = hitcoord;
+                }
+
+                if ((entity != null)
+                    && ((Gta5EyeTracking.ScriptHookExtensions.IsEntityAPed(entity)
+                            && entity.Handle != Game.Player.Character.Handle)
+                        || (Gta5EyeTracking.ScriptHookExtensions.IsEntityAVehicle(entity)
+                            && !(Game.Player.Character.IsInVehicle()
+                                && entity.Handle == Game.Player.Character.CurrentVehicle.Handle))))
+                {
+                    Actor actor = ActiveScenario.FindActorByEntity(entity);
+
+                    if (actor != null)
+                    {
+                        hitCoords = resultCoord;
+                        return actor;
+                    }
+                }
+            }
+
+            hitCoords = new Vector3();
+            return null;
         }
 
         public Vector2 GetFilteredScreenCoords(Vector2 source, Vector2 target)
@@ -304,6 +360,8 @@ namespace BepMod.Data
 
         public Logger(SmartEye smartEye)
         {
+            nfi.NumberDecimalSeparator = ".";
+
             this.smartEye = smartEye;
 
             Directory.CreateDirectory(BasePath);
