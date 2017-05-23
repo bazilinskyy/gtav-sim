@@ -10,19 +10,46 @@ using System.Net;
 using System.Threading;
 
 using static BepMod.Util;
+using System.Drawing;
 
 namespace BepMod.Data
 {
     class SmartEye
     {
         public string status = "";
-        //private List<Vector2> coords = new List<Vector2>();
         private List<Vector2> _smoothedCoords = new List<Vector2>();
         public Vector2 Coords = new Vector2(0, 0);
         public Vector2 SmoothedCoords = new Vector2(0, 0);
 
+        private UInt32 prevFrameNumber;
+
+        public Packet lastPacket = new Packet();
+        public UInt32 lastFrameNumber;
+
+        private int _tick;
+        public int LastDataTick;
+        public int LastGazeTick;
+        public int MaxTicksForData = 30;
+        public int MaxTicksForGaze = 60;
+
+        public WorldIntersection lastClosestWorldIntersection = WorldIntersection.Empty;
+
+        public int listenPort = 5001;
+        public bool Listening = false;
+        public Thread listeningThread;
+
+        public bool LookingAtScreen;
+
+        public bool ReceivedData;
+        public bool ReceivedGaze;
+
+        public bool DataTimedOut;
+        public bool GazeTimedOut;
+
         public void DoTick()
         {
+            _tick++;
+
             if (!string.IsNullOrEmpty(status))
             {
                 Log("SmartEye: " + status);
@@ -32,19 +59,70 @@ namespace BepMod.Data
                 }
                 status = "";
             }
+
+            ReceivedData = false;
+            ReceivedGaze = false;
+            DataTimedOut = false;
+            GazeTimedOut = false;
+
+            if (Listening)
+            {
+                ReceivedData = lastFrameNumber > 0 && prevFrameNumber != lastFrameNumber;
+                ReceivedGaze = !lastClosestWorldIntersection.IsEmpty;
+
+                if (ReceivedData)
+                {
+                    LastDataTick = _tick;
+                }
+
+                if (ReceivedGaze)
+                {
+                    LastGazeTick = _tick;
+                }
+
+                DataTimedOut = _tick - LastDataTick > MaxTicksForData;
+                GazeTimedOut = DataTimedOut || _tick - LastGazeTick > MaxTicksForGaze;
+            }
+
+            if (DataTimedOut)
+            {
+                UIText gto = new UIText(
+                    "No data received from SmartEye\nListening on port " + listenPort,
+                    position: new Point((int)UI.WIDTH / 2, (int)UI.HEIGHT / 3),
+                    scale: 2.0f,
+                    font: GTA.Font.Pricedown,
+                    color: Color.Yellow,
+                    centered: true,
+                    shadow: true,
+                    outline: true
+                );
+                gto.Draw();
+
+                Game.TimeScale = 0.0f;
+            }
+            else if (GazeTimedOut)
+            {
+                UIText gto = new UIText(
+                    "Please look at the screen",
+                    position: new Point((int)UI.WIDTH / 2, (int)UI.HEIGHT / 3),
+                    scale: 2.0f,
+                    font: GTA.Font.Pricedown,
+                    color: Color.Yellow,
+                    centered: true,
+                    shadow: true,
+                    outline: true
+                );
+                gto.Draw();
+
+                Game.TimeScale = 0.0f;
+            }
+            else
+            {
+                Game.TimeScale = 1.0f;
+            }
+
+            prevFrameNumber = lastFrameNumber;
         }
-
-        public Packet lastPacket = new Packet();
-        public UInt32 lastFrameNumber;
-        public WorldIntersection lastClosestWorldIntersection = new WorldIntersection(
-            new Vector3(0, 0, 0),
-            new Vector3(UI.WIDTH / 2, UI.HEIGHT / 2, 0),
-            "No recorded intersection yet"
-        );
-
-        public int listenPort = 5001;
-        public bool listening = false;
-        public Thread listeningThread;
 
         public int GetOpenUdpPort()
         {
@@ -77,13 +155,13 @@ namespace BepMod.Data
             Log("SmartEye.Start()");
             status = "SmartEye.Start()";
 
-            if (listening == false)
+            if (Listening == false)
             {
                 Stop();
 
                 this.listenPort = GetOpenUdpPort();
 
-                listening = true;
+                Listening = true;
                 listeningThread = new Thread(new ThreadStart(PacketListener));
                 listeningThread.IsBackground = true;
                 listeningThread.Start();
@@ -95,9 +173,9 @@ namespace BepMod.Data
             Log("SmartEye.Stop()");
             status = "SmartEye.Stop()";
 
-            if (listening == true)
+            if (Listening == true)
             {
-                listening = false;
+                Listening = false;
             }
 
             if (socket != null)
@@ -105,6 +183,14 @@ namespace BepMod.Data
                 socket.Close();
                 socket = null;
             }
+
+            prevFrameNumber = 0;
+            lastFrameNumber = 0;
+            lastPacket = new Packet();
+            lastClosestWorldIntersection = WorldIntersection.Empty;
+            Coords = new Vector2();
+            SmoothedCoords = new Vector2();
+            _smoothedCoords.Clear();
         }
 
         public void PacketListener()
@@ -126,7 +212,7 @@ namespace BepMod.Data
                 IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
                 status = "SmartEye listening on " + listenPort.ToString();
 
-                while (listening)
+                while (Listening)
                 {
                     try
                     {
@@ -135,6 +221,8 @@ namespace BepMod.Data
                         Packet res = new Packet(data);
 
                         lastPacket = res;
+                        LookingAtScreen = false;
+                        lastClosestWorldIntersection = WorldIntersection.Empty;
 
                         foreach (SubPacket subPacket in res.SubPackets)
                         {
@@ -146,6 +234,7 @@ namespace BepMod.Data
                             {
                                 lastClosestWorldIntersection = subPacket.GetWorldIntersection();
                                 ProcessScreenWorldIntersection(lastClosestWorldIntersection);
+                                LookingAtScreen = true;
                             }
                         }
                     }
@@ -197,6 +286,15 @@ namespace BepMod.Data
                     ObjectPoint.ToString()
                 );
             }
+
+            private static string _emptyName = "\0EMPTY\0";
+            public static WorldIntersection Empty = new WorldIntersection(
+                new Vector3(),
+                new Vector3(UI.WIDTH / 2, UI.HEIGHT / 2, 0),
+                _emptyName
+            );
+
+            public bool IsEmpty => Name == _emptyName;
         }
 
         public struct SubPacket

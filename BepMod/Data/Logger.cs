@@ -52,6 +52,7 @@ namespace BepMod.Data
             "ParticipantCameraRotation.X",
             "ParticipantCameraRotation.Z",
             "ParticipantSpeed",
+            "LookingAtScreen",
             "GazeScreenCoords.X",
             "GazeScreenCoords.Y",
             "SmoothedGazeScreenCoords.X",
@@ -87,9 +88,10 @@ namespace BepMod.Data
             // SmartEye Data
             public UInt64 FrameNumber;
             public Vector2 PreviousGazeScreenCoords;
+            public bool LookingAtScreen;
             public Vector2 GazeScreenCoords;
             public Vector2 SmoothedGazeScreenCoords;
-            
+
 
             // GTA participant details
             public Vector3 ParticipantPosition;
@@ -134,17 +136,18 @@ namespace BepMod.Data
 
                     ParticipantSpeed.ToString(nfi),
 
+                    LookingAtScreen ? 1 : 0,
                     GazeScreenCoords.X.ToString(nfi),
                     GazeScreenCoords.Y.ToString(nfi),
                     SmoothedGazeScreenCoords.X.ToString(nfi),
                     SmoothedGazeScreenCoords.Y.ToString(nfi),
 
-                    GazeRayResult.DitHitAnything,
+                    GazeRayResult.DitHitAnything ? 1 : 0,
                     GazeRayResult.HitCoords.X.ToString(nfi),
                     GazeRayResult.HitCoords.Y.ToString(nfi),
                     GazeRayResult.HitCoords.Z.ToString(nfi),
 
-                    GazeRayResult.DitHitEntity,
+                    GazeRayResult.DitHitEntity ? 1 : 0,
                     GazeRayResult.DitHitEntity
                         ? EscapeCSV(GazeRayResult.HitEntity.Handle.ToString()) :
                         "",
@@ -173,6 +176,7 @@ namespace BepMod.Data
 
             e.FrameNumber = smartEye.lastFrameNumber;
 
+            e.LookingAtScreen = smartEye.LookingAtScreen;
             e.PreviousGazeScreenCoords = PreviousEntry.GazeScreenCoords;
             e.GazeScreenCoords = smartEye.Coords;
             e.SmoothedGazeScreenCoords = smartEye.SmoothedCoords;
@@ -226,6 +230,7 @@ namespace BepMod.Data
             ShowMessage("- ParticipantSpeed: " + e.ParticipantSpeed, i++);
             ShowMessage("- ParticipantCameraRotation: " + e.ParticipantCameraRotation, i++);
             ShowMessage("- PreviousGazeScreenCoords: " + e.PreviousGazeScreenCoords, i++);
+            ShowMessage("- LookingAtScreen: " + e.LookingAtScreen, i++);
             ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
             ShowMessage("- SmoothedGazeScreenCoords: " + e.SmoothedGazeScreenCoords, i++);
             ShowMessage("- GazeRayResult Hit: " + e.GazeRayResult.DitHitAnything, i++);
@@ -292,7 +297,7 @@ namespace BepMod.Data
             var radius = 2;
             var numPoints = 5;
             var angleStep = Math.PI * 0.2;
-            var distStep = 0.2 / numPoints;
+            var distStep = 0.05 / numPoints;
             var resultCoord = new Vector3();
 
             for (var i = 0; i < numPoints; i++)
