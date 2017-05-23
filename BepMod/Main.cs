@@ -133,15 +133,6 @@ namespace BepMod.Data
             Tick += MainTick;
             Aborted += MainAborted;
 
-            gpsSoundLeft.SoundLocation = audioBase + "LEFT.WAV";
-            gpsSoundLeft.Load();
-
-            gpsSoundRight.SoundLocation = audioBase + "RIGHT.WAV";
-            gpsSoundRight.Load();
-
-            gpsSoundStraight.SoundLocation = audioBase + "STRAIGHTAHEAD.WAV";
-            gpsSoundStraight.Load();
-
             Game.Player.Character.IsInvincible = true;
 
             if (Game.IsScreenFadedOut)
@@ -205,7 +196,7 @@ namespace BepMod.Data
             }
             else if (e.KeyCode == Keys.Z)
             {
-                Mayhem();
+                //Mayhem();
             }
             else if (e.KeyCode == Keys.L)
             {

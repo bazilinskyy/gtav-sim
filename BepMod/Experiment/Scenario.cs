@@ -13,6 +13,8 @@ namespace BepMod.Experiment
 {
     abstract class Scenario
     {
+        public static GPS gps = new GPS();
+
         public string Name;
 
         public Vector3[] Points;

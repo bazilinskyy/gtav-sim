@@ -29,11 +29,6 @@ namespace BepMod
         };
         public static TrafficLightColor trafficLightsColor = TrafficLightColor.AUTO;
 
-        public static System.Media.SoundPlayer gpsSoundLeft = new System.Media.SoundPlayer();
-        public static System.Media.SoundPlayer gpsSoundRight = new System.Media.SoundPlayer();
-        public static System.Media.SoundPlayer gpsSoundStraight = new System.Media.SoundPlayer();
-        public static string audioBase = ".\\scripts\\GPS\\Audio\\snoop_dogg\\";
-
         static Util() { }
 
         public static void Log(string message, string name = "general")

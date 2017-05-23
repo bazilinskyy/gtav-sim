@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Data\Logger.cs" />
     <Compile Include="Data\SmartEye.cs" />
+    <Compile Include="Experiment\GPS.cs" />
     <Compile Include="Gta5EyeTracking\CameraHelper.cs" />
     <Compile Include="Gta5EyeTracking\Geometry.cs" />
     <Compile Include="Gta5EyeTracking\Mathf.cs" />
