@@ -247,18 +247,18 @@ namespace BepMod.Data
         {
             UIRectangle es = new UIRectangle(
                 new Point(
-                    (int)(((e.SmoothedGazeScreenCoords.X + 1) / 2) * UI.WIDTH),
-                    (int)(((e.SmoothedGazeScreenCoords.Y + 1) / 2) * UI.HEIGHT)
+                    (int)(((e.SmoothedGazeScreenCoords.X + 1) / 2) * UI.WIDTH) - 8,
+                    (int)(((e.SmoothedGazeScreenCoords.Y + 1) / 2) * UI.HEIGHT) - 8
                 ),
-                new Size(new Point(15, 15)),
+                new Size(new Point(16, 16)),
                 Color.FromArgb(150, Color.Red)
             );
             es.Draw();
 
             UIRectangle et = new UIRectangle(
                 new Point(
-                    (int)(((e.GazeScreenCoords.X + 1) / 2) * UI.WIDTH),
-                    (int)(((e.GazeScreenCoords.Y + 1) / 2) * UI.HEIGHT)
+                    (int)(((e.GazeScreenCoords.X + 1) / 2) * UI.WIDTH) - 5,
+                    (int)(((e.GazeScreenCoords.Y + 1) / 2) * UI.HEIGHT) - 5
                 ),
                 new Size(new Point(10, 10)),
                 Color.FromArgb(150, Color.Yellow)

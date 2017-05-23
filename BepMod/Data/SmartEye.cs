@@ -309,6 +309,7 @@ namespace BepMod.Data
             ) * 2 - new Vector2(1, 1);
         }
 
+        // https://en.wikipedia.org/wiki/Exponential_smoothing#The_weighted_moving_average
         //private int[] weights = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 }; // <3 2^n
         //private int[] weights = { 1, 1, 2, 2, 4, 4, 8, 16, 16, 16 };
         //private int[] weights = { 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 }; // <3 fibonacci
