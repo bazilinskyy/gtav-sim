@@ -287,7 +287,6 @@ namespace BepMod.Data
             public List<Actor> ActorsInRange;
             public float ActorDistance;
 
-
             public static string CSVHeader = String.Join(",",
                 "Index",
                 "Tick",
@@ -469,8 +468,10 @@ namespace BepMod.Data
             // ShowMessage("- ParticipantCameraRotation: " + e.ParticipantCameraRotation, i++);
             // ShowMessage("- PreviousGazeScreenCoords: " + e.PreviousGazeScreenCoords, i++);
             ShowMessage("- LookingAtScreen: " + e.LookingAtScreen, i++);
-            // ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
+            ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
             ShowMessage("- SmoothedGazeScreenCoords: " + e.SmoothedGazeScreenCoords, i++);
+            //ShowMessage("- Screen coords: " + , i++);
+            ShowMessage("- UI: " + uiWidth + ":" + uiHeight, i++);
             ShowMessage("- GazeRayResult Hit: " + e.GazeRayResult.DitHitAnything, i++);
             ShowMessage("- GazeRayResult Entity: " + e.GazeRayResult.HitEntity, i++);
             ShowMessage("- GazeRayResult Entity.GetHashCode(): " + 

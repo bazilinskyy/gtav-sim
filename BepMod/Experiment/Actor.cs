@@ -178,8 +178,8 @@ namespace BepMod.Experiment
                             vehicle?.Speed
                         ),
                         new Point(
-                            (int)(((sc.X + 1) / 2) * UI.WIDTH),
-                            (int)(((sc.Y + 1) / 2) * UI.HEIGHT)
+                            (int)(((sc.X + 1) / 2) * uiWidth),
+                            (int)(((sc.Y + 1) / 2) * uiHeight)
                         ),
                         0.5f,
                         font: GTA.Font.ChaletLondon,

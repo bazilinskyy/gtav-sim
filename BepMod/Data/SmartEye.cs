@@ -291,7 +291,7 @@ namespace BepMod.Data
             private static string _emptyName = "\0EMPTY\0";
             public static WorldIntersection Empty = new WorldIntersection(
                 new Vector3(),
-                new Vector3(UI.WIDTH / 2, UI.HEIGHT / 2, 0),
+                new Vector3(uiWidth / 2, uiHeight / 2, 0),
                 _emptyName
             );
 
@@ -403,8 +403,8 @@ namespace BepMod.Data
         private Vector2 GetScreenCoordsFromPoint(Vector3 point)
         {
             return new Vector2(
-                point.X / UI.WIDTH,
-                point.Y / UI.HEIGHT
+                point.X / uiWidth,
+                point.Y / uiHeight
             ) * 2 - new Vector2(1, 1);
         }
 

@@ -13,6 +13,9 @@ namespace BepMod
 
     static class Util
     {
+        public static int uiWidth = 1920;
+        public static int uiHeight = 1200;
+
         public static int debugLevel = 1;
 
         public static String[] messages = new String[30];

@@ -540,8 +540,8 @@ namespace BepMod.Experiment
                     a10_2.DriveTo(Points[0], 35.0f);
                 },
                 exit: t => {
-                    CheckRedLight();
-                    m10.Stop("RAN_RED_LIGHT", _participantRanRedLight ? "1" : "0");
+                    //CheckRedLight();
+                    //m10.Stop("RAN_RED_LIGHT", _participantRanRedLight ? "1" : "0");
                 }
             );
 
