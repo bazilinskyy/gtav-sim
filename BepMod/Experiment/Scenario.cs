@@ -34,16 +34,15 @@ namespace BepMod.Experiment
         public List<Actor> actors = new List<Actor>();
         public List<Trigger> triggers = new List<Trigger>();
 
-        public Logger Logger;
-        public Stopwatch stopwatch;
+        public Stopwatch Stopwatch;
 
-        public void Main()
-        {
-            Log("Scenario.Main()");
-        }
+        protected Logger _logger;
+        protected SmartEye _smartEye;
+
+        protected bool _participantRanRedLight = false;
 
         public Scenario() { }
-
+        
         public void SetStart(Vector3 position, float heading)
         {
             StartPosition = position;
@@ -61,15 +60,16 @@ namespace BepMod.Experiment
         }
 
         public virtual void PreRun() { }
-        public virtual void PostRun() { }
+        public virtual void Initialise() { }
 
 
-        public virtual void Run(Logger dataLog)
+        public virtual void Run(Logger logger, SmartEye smartEye)
         {
-            stopwatch = new Stopwatch();
-            stopwatch.Stop();
+            Stopwatch = new Stopwatch();
+            Stopwatch.Stop();
 
-            Logger = dataLog;
+            _logger = logger;
+            _smartEye = smartEye;
 
             Log("Scenario.Run()");
 
@@ -97,7 +97,7 @@ namespace BepMod.Experiment
             for (int i = 0; i < Points.Length; i++)
             {
                 Vector3 point = Points[i];
-                Trigger pointTrigger = AddTrigger(
+                Trigger pointTrigger = CreateTrigger(
                     point,
                     name: i.ToString()
                 );
@@ -146,10 +146,10 @@ namespace BepMod.Experiment
 
             World.Weather = Weather;
 
-            stopwatch.Start();
-            Logger.Start(this);
+            Stopwatch.Start();
+            _logger.Start(this);
 
-            PostRun();
+            Initialise();
 
             vehicle.Speed = 0;
 
@@ -158,7 +158,25 @@ namespace BepMod.Experiment
 
         override public string ToString()
         {
-            return Name;
+            return String.Format("SCENARIO_{0}", Name);
+        }
+
+        public bool CheckRedLight() {
+            if (trafficLightsColor == TrafficLightColor.Red)
+            {
+                if (_participantRanRedLight == false)
+                {
+                    UI.ShowSubtitle("Pas op met stoplichten!", 3000);
+                }
+
+                _participantRanRedLight = true;
+            }
+            else if (_participantRanRedLight == true)
+            {
+                _participantRanRedLight = false;
+            }
+
+            return _participantRanRedLight;
         }
 
         public void SetWaypoint(int index)
@@ -173,27 +191,22 @@ namespace BepMod.Experiment
         public void AddBlibForPoint(Vector3 point, int index)
         {
             Blip blip = World.CreateBlip(point);
-            blip.Name = "Point " + index.ToString();
+            blip.Name = "POINT_" + index.ToString();
             Blips.Add(blip);
         }
 
         public struct Delay
         {
             public bool Cancelled;
-            //public bool Called;
 
             public Action Callback;
             public Int64 Timeout;
 
             public Int64 StartTime;
 
-            //public bool IsCancelled { get => Cancelled; }
-            //public bool IsCalled { get => Called; }
-
             public Delay(Action callback, Int64 timeoutMs, Int64 elapsedMs)
             {
                 Cancelled = false;
-                //Called = false;
                 Callback = callback;
                 Timeout = timeoutMs;
                 StartTime = elapsedMs;
@@ -222,7 +235,7 @@ namespace BepMod.Experiment
 
         public Delay SetTimeout(Action callback, Int64 timeoutMs)
         {
-            return SetTimeout(new Delay(callback, timeoutMs, stopwatch.ElapsedMilliseconds));
+            return SetTimeout(new Delay(callback, timeoutMs, Stopwatch.ElapsedMilliseconds));
         }
 
         public Delay SetTimeout(Delay delay)
@@ -235,10 +248,16 @@ namespace BepMod.Experiment
         {
             if (Running)
             {
-                Int64 elapsedMs = stopwatch.ElapsedMilliseconds;
+                Int64 elapsedMs = Stopwatch.ElapsedMilliseconds;
                 World.CurrentDayTime = new TimeSpan(12, 0, 0);
 
                 Game.Player.Character.Health = 100;
+
+                if (_participantRanRedLight) {
+                    vehicle.Speed = 0.0f;
+                    CheckRedLight();
+
+                }
 
                 DoRemoveVehicles();
                 DoRemovePeds();
@@ -257,6 +276,7 @@ namespace BepMod.Experiment
                 {
                     actor.DoTick();
                 }
+                actors.RemoveAll(x => x.IsRemoved);
 
                 foreach (Trigger trigger in triggers)
                 {
@@ -269,9 +289,9 @@ namespace BepMod.Experiment
         {
             Log("Scenario.Stop()");
 
-            stopwatch.Stop();
+            Stopwatch.Stop();
 
-            Logger.Stop();
+            _logger.Stop();
 
             Running = false;
 
@@ -324,10 +344,10 @@ namespace BepMod.Experiment
             VehicleHash vehicleHash = VehicleHash.Prairie
         )
         {
-            return AddParkedVehicle(new Vector3(x, y, z), heading, vehicleHash);
+            return CreateParkedVehicle(new Vector3(x, y, z), heading, vehicleHash);
         }
 
-        public Vehicle AddParkedVehicle(
+        public Vehicle CreateParkedVehicle(
             Vector3 position, float heading,
             VehicleHash vehicleHash = VehicleHash.Prairie
         )
@@ -338,19 +358,22 @@ namespace BepMod.Experiment
             return vehicle;
         }
 
-        public Trigger AddTrigger(
+        public Trigger CreateTrigger(
             Vector3 position,
             float radius = 10.0f,
-            String name = ""
+            String name = "",
+            Entity entity = null,
+            Action<Trigger> enter = null,
+            Action<Trigger> exit = null
         )
         {
-            Trigger trigger = new Trigger(position, radius, name);
+            Trigger trigger = new Trigger(position, radius, name, entity, enter, exit);
             triggers.Add(trigger);
             trigger.index = triggers.IndexOf(trigger);
             return trigger;
         }
 
-        public Actor AddActor(
+        public Actor CreateActor(
             Vector3 position, float heading,
             float radius = 5.0f,
             PedHash pedHash = default(PedHash),
@@ -362,7 +385,7 @@ namespace BepMod.Experiment
             actors.Add(actor);
             return actor;
         }
-
+        
         public Actor FindActorByEntity(Entity entity)
         {
             int handle = entity.Handle;

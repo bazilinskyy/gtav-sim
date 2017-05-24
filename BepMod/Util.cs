@@ -9,11 +9,11 @@ using GTA.Native;
 
 namespace BepMod
 {
-    enum TrafficLightColor { GREEN = 0, RED, YELLOW, AUTO }
+    enum TrafficLightColor { Green = 0, Red, Yellow, Auto }
 
     static class Util
     {
-        public static int debugLevel = 2;
+        public static int debugLevel = 0;
 
         public static String[] messages = new String[30];
 
@@ -27,7 +27,7 @@ namespace BepMod
             862871082,
             1043035044
         };
-        public static TrafficLightColor trafficLightsColor = TrafficLightColor.AUTO;
+        public static TrafficLightColor trafficLightsColor = TrafficLightColor.Auto;
 
         static Util() { }
 
@@ -50,7 +50,7 @@ namespace BepMod
         {
             ShowMessages();
 
-            if (trafficLightsColor != TrafficLightColor.AUTO)
+            if (trafficLightsColor != TrafficLightColor.Auto)
             {
                 foreach (Prop prop in World.GetNearbyProps(Game.Player.Character.Position, 100.0f))
                 {

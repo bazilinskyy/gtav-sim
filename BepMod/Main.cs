@@ -24,14 +24,14 @@ namespace BepMod.Data
         private UIMenu menu;
         private MenuPool menuPool = new MenuPool();
 
-        private SmartEye smartEye = new SmartEye();
-        private Logger dataLog;
+        private Logger _logger;
+        private SmartEye _smartEye = new SmartEye();
 
         public Main()
         {
             Log("Main.Main()");
 
-            dataLog = new Logger(smartEye);
+            _logger = new Logger(_smartEye);
 
             scenarios.Add(new Scenario1());
             // scenarios.Add(new Scenario2());
@@ -144,14 +144,14 @@ namespace BepMod.Data
         private void MainAborted(object sender, EventArgs e)
         {
             Log("ABORTED");
-            dataLog.Stop();
-            smartEye.Stop();
+            _logger.Stop();
+            _smartEye.Stop();
         }
 
         ~Main()
         {
             Log("Main.~Main()");
-            smartEye.Stop();
+            _smartEye.Stop();
             StopScenario();
             ClearVehiclePool();
             Log("Main.~Main(): shut down complete");
@@ -200,11 +200,11 @@ namespace BepMod.Data
             }
             else if (e.KeyCode == Keys.L)
             {
-                smartEye.Stop();
+                _smartEye.Stop();
             }
             else if (e.KeyCode == Keys.O)
             {
-                smartEye.Start();
+                _smartEye.Start();
             }
             else if (e.KeyCode == Keys.OemPeriod)
             {
@@ -265,7 +265,7 @@ namespace BepMod.Data
             Log("Main.RunScenario()");
             StopScenario();
             ActiveScenario = scenarios[index];
-            ActiveScenario.Run(dataLog);
+            ActiveScenario.Run(_logger, _smartEye);
         }
 
         private void Menu_OnCheckboxChange(UIMenu sender, UIMenuCheckboxItem checkboxItem, bool Checked)
@@ -283,7 +283,7 @@ namespace BepMod.Data
                 ticked = true;
                 try
                 {
-                    smartEye.Start();
+                    _smartEye.Start();
                     RunScenario(0);
                 }
                 catch { }
@@ -294,8 +294,8 @@ namespace BepMod.Data
                 ActiveScenario.DoTick();
             }
 
-            smartEye.DoTick();
-            dataLog.DoTick();
+            _smartEye.DoTick();
+            _logger.DoTick();
             Util.DoTick();
         }
     }

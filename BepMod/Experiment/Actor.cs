@@ -22,7 +22,7 @@ namespace BepMod.Experiment
     {
         public float distance;
 
-        public String Name;
+        public String _name;
 
         public float MinSpeed = 0.0f;
 
@@ -35,8 +35,15 @@ namespace BepMod.Experiment
         public int vehicleHandle = -1;
         public int pedHandle = -1;
 
-        public float triggerRadius;
+        public float _radius;
         public bool triggeredInside = false;
+
+        private Vector3 _destination = new Vector3();
+        private float _destinationRadius = 5.0f;
+        private Action _destinationReached;
+
+        private bool _removed = false;
+        public bool IsRemoved { get => _removed; }
 
         public Actor(
             Vector3 position,
@@ -44,11 +51,13 @@ namespace BepMod.Experiment
             float radius = 0.0f,
             PedHash pedHash = default(PedHash),
             VehicleHash vehicleHash = default(VehicleHash),
-            String name = ""
+            String name = "",
+            Action destinationReached = null
         )
         {
-            triggerRadius = radius;
-            Name = name;
+            _radius = radius;
+            _name = name;
+            _destinationReached = destinationReached;
 
             if (vehicleHash != default(VehicleHash))
             {
@@ -81,7 +90,7 @@ namespace BepMod.Experiment
             }
         }
 
-        public void Dispose()
+        public void Remove()
         {
             if (ped != null && ped.Exists())
             {
@@ -97,11 +106,18 @@ namespace BepMod.Experiment
 
             ped = null;
             vehicle = null;
+
+            _removed = true;
+        }
+
+        public void Dispose()
+        {
+            Remove();
         }
 
         override public string ToString()
         {
-            return String.Format("ACTOR_{0}", Name);
+            return String.Format("ACTOR_{0}", _name);
         }
 
         public Vector3 Position {
@@ -114,10 +130,10 @@ namespace BepMod.Experiment
 
         protected virtual void OnActorInsideRadius(EventArgs e)
         {
-            Log("Actor inside radius: " + Name);
+            Log("Actor inside radius: " + _name);
             if (debugLevel > 0)
             {
-                ShowMessage("Actor inside radius: " + Name);
+                ShowMessage("Actor inside radius: " + _name);
             }
 
             ActorInsideRadius?.Invoke(this, e);
@@ -125,10 +141,10 @@ namespace BepMod.Experiment
 
         protected virtual void OnActorOutsideRadius(EventArgs e)
         {
-            Log("Actor outside radius: " + Name);
+            Log("Actor outside radius: " + _name);
             if (debugLevel > 0)
             {
-                ShowMessage("Actor outside radius: " + Name);
+                ShowMessage("Actor outside radius: " + _name);
             }
 
             ActorOutsideRadius?.Invoke(this, e);
@@ -139,19 +155,48 @@ namespace BepMod.Experiment
             Vector3 playerPos = Game.Player.Character.Position;
             Vector3 actorPos = Position;
 
-            distance = Position.DistanceTo(playerPos);
-            bool inRange = distance < triggerRadius;
+            distance = Position.DistanceTo2D(playerPos);
+            bool inRange = distance < _radius;
 
             if (vehicle != null && vehicle.Speed < MinSpeed)
             {
                 vehicle.Speed = MinSpeed;
             }
 
+            if (debugLevel > 1 && distance < 75.0f)
+            {
+                Vector2 sc;
+                Gta5EyeTracking.Geometry.WorldToScreenRel_Native(Position, out sc);
+
+                if (sc.X != 0 || sc.Y != 0)
+                {
+                    UIText label = new UIText(
+                        String.Join("\n",
+                            _name,
+                            Position,
+                            vehicle?.Speed
+                        ),
+                        new Point(
+                            (int)(((sc.X + 1) / 2) * UI.WIDTH),
+                            (int)(((sc.Y + 1) / 2) * UI.HEIGHT)
+                        ),
+                        0.5f,
+                        font: GTA.Font.ChaletLondon,
+                        color: Color.White,
+                        shadow: false,
+                        outline: true,
+                        centered: true
+                    );
+                    label.Draw();
+                }
+
+            }
+
             if (debugLevel > 2)
             {
                 RenderCircleOnGround(
                     Position,
-                    triggerRadius,
+                    _radius,
                     inRange ? Color.Green : Color.Red
                 );
             }
@@ -166,6 +211,31 @@ namespace BepMod.Experiment
                 triggeredInside = false;
                 OnActorOutsideRadius(EventArgs.Empty);
             }
+
+            if (Position.DistanceTo2D(_destination) < _destinationRadius)
+            {
+                _destinationReached?.Invoke();
+                _destination = new Vector3();
+            }
+        }
+
+        public void DriveTo(
+            Vector3 target, float speed = 5.0f,
+            float radius = 1.0f, float destinationRadius = 10.0f,
+            DrivingStyle drivingstyle = DrivingStyle.Normal,
+            Action destinationReached = null
+        )
+        {
+            _destination = target;
+            _destinationRadius = destinationRadius;
+            _destinationReached = destinationReached;
+
+            ped.Task.DriveTo(
+                vehicle, 
+                target, 
+                speed, 
+                drivingstyle.GetHashCode()
+            );
         }
     }
 }

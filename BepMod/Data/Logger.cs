@@ -21,8 +21,10 @@ namespace BepMod.Data
         private int CurrentTick = 0;
         private bool Running = false;
 
-        private List<Entry> entries = new List<Entry>();
-        private List<Vector2> coords = new List<Vector2>();
+        private List<Entry> _entries = new List<Entry>();
+        private List<Vector2> _coords = new List<Vector2>();
+        private List<Measurement> _measurements = new List<Measurement>();
+        private List<Measurement> _activeMeasurements = new List<Measurement>();
 
         private Entry PreviousEntry = new Entry();
 
@@ -30,51 +32,209 @@ namespace BepMod.Data
         public SmartEye smartEye;
 
         public DateTime StartTime;
-        public StreamWriter Writer;
         public string BasePath = "BepModLog";
-        public string DateLogNameFormat = "{0}--{1}.csv";
-        public string DateLogDateTimeFormat = "yyyy-MM-dd--HH-mm-ss";
+        public string DateTimeFormat = "yyyy-MM-dd--HH-mm-ss";
+
+        public string LogFileNameFormat = "{0}--{1}-log.csv";
+        public string LogFileName;
+        public StreamWriter LogWriter;
+
+        public string MeasurementFileNameFormat = "{0}--{1}-measurements.csv";
+        public string MeasurementFileName;
+        public StreamWriter MeasurementsWriter;
 
         private int ShowEntryStartIndex = 2;
 
         private static NumberFormatInfo nfi = new NumberFormatInfo();
 
-        private string CSVHeader = String.Join(",",
-            "Index",
-            "Tick",
-            "FrameNumber",
-            "ElapsedMS",
-            "Scenario",
-            "ParticipantPosition.X",
-            "ParticipantPosition.Y",
-            "ParticipantPosition.Z",
-            "ParticipantHeading",
-            "ParticipantCameraRotation.X",
-            "ParticipantCameraRotation.Z",
-            "ParticipantSpeed",
-            "LookingAtScreen",
-            "GazeScreenCoords.X",
-            "GazeScreenCoords.Y",
-            "SmoothedGazeScreenCoords.X",
-            "SmoothedGazeScreenCoords.Y",
-            "GazeRayResult.DitHitAnything",
-            "GazeRayResult.HitCoords.X",
-            "GazeRayResult.HitCoords.Y",
-            "GazeRayResult.HitCoords.Z",
-            "GazeRayResult.DitHitEntity",
-            "GazeRayResult.HitEntity.Handle",
-            "GazingAtActor",
-            "GazeActor",
-            "GazeActor.Position.X",
-            "GazeActor.Position.Y",
-            "GazeActor.Position.Z",
-            "ActiveTriggers",
-            "ActorsInRange"
-        );
-
         public static string EscapeCSV(string s)
         {
             return "\"" + s.Replace("\"", "\"\"") + "\"";
+        }
+
+        public class Measurement
+        {
+            private Logger _logger;
+
+            private bool _started;
+            private bool _stopped;
+
+            private Actor _startActor;
+            private Actor _stopActor;
+
+            public int StartTick;
+            public int EndTick;
+            public int ElapsedTick;
+
+            public Int64 StartMS;
+            public Int64 EndMS;
+            public Int64 ElapsedMS;
+
+            public UInt64 StartFrameNumber;
+            public UInt64 EndFrameNumber;
+            public UInt64 ElapsedFrameNumber;
+
+            public string StartEvent = "";
+            public string StartName = "";
+            public string StopEvent = "";
+            public string StopName = "";
+
+            public bool Started { get => _started; }
+            public bool Stopped { get => _stopped; }
+
+            internal Actor StopActor { get => _stopActor; }
+            internal Actor StartActor { get => _startActor; }
+
+            public Measurement(Logger logger, string startEvent = "", string startName = "")
+            {
+                _logger = logger;
+                StartEvent = startEvent;
+                StartName = startName;
+            }
+
+            public Measurement Start(Trigger trigger)
+            {
+                return Start(trigger.ToString(), "ENTER");
+            }
+
+            public Measurement Start(string startName = "", string startEvent = "")
+            {
+                if (_stopped || _started) {
+                    return this;
+                }
+
+                if (startEvent != "")
+                {
+                    StartEvent = startEvent;
+                }
+
+                if (startName != "")
+                {
+                    StartName = startName;
+                }
+                
+                StartTick = _logger.CurrentTick;
+                StartFrameNumber = _logger.smartEye.lastFrameNumber;
+                StartMS = _logger.ActiveScenario.Stopwatch.ElapsedMilliseconds;
+
+                _started = true;
+
+                _logger._activeMeasurements.Add(this);
+
+                return this;
+            }
+
+            public Measurement Stop(string stopName = "", string stopEvent = "")
+            {
+                if (_stopped || !_started) {
+                    return this;
+                }
+                
+                if (stopName != "")
+                {
+                    StopName = stopName;
+                }
+
+                if (stopEvent != "")
+                {
+                    StopEvent = stopEvent;
+                }
+                
+                EndTick = _logger.CurrentTick;
+                EndFrameNumber = _logger.smartEye.lastFrameNumber;
+                EndMS = _logger.ActiveScenario.Stopwatch.ElapsedMilliseconds;
+
+                ElapsedTick = EndTick - StartTick;
+                ElapsedFrameNumber = EndFrameNumber - StartFrameNumber;
+                ElapsedMS = EndMS - StartMS;
+
+                _stopped = true;
+
+                _logger.WriteMeasurement(this);
+
+                return this;
+            }
+
+            public Measurement StartOnGazeAtActor(Actor actor) 
+            {
+                if (StartName == "")
+                {
+                    StartName = actor.ToString();
+                }
+
+                if (StartEvent == "")
+                {
+                    StartEvent = "GAZE";
+                }
+
+                _startActor = actor;
+
+                return this;
+            }
+
+            public Measurement StopOnGazeAtActor(Actor actor)
+            {
+                if (StopName == "")
+                {
+                    StopName = actor.ToString();
+                }
+
+                if (StopEvent == "")
+                {
+                    StopEvent = "GAZE";
+                }
+
+                _stopActor = actor;
+
+                return this;
+            }
+
+            public static string CSVHeader = String.Join(",",
+                "StartName",
+                "StartEvent",
+
+                "StopName",
+                "StopEvent",
+
+                "Stopped",
+
+                "ElapsedMS",
+                "ElapsedTick",
+                "ElapsedFrameNumber",
+
+                "StartMS",
+                "StartTick",
+                "StartFrameNumber",
+
+                "EndMS",
+                "EndTick",
+                "EndFrameNumber"
+            );
+
+            public string ToCSV()
+            {
+                return String.Join(",",
+                    EscapeCSV(StartName),
+                    EscapeCSV(StartEvent),
+
+                    EscapeCSV(StopName),
+                    EscapeCSV(StopEvent),
+
+                    Stopped ? 1 : 0,
+
+                    ElapsedMS,
+                    ElapsedTick,
+                    ElapsedFrameNumber,
+
+                    StartMS,
+                    StartTick,
+                    StartFrameNumber,
+
+                    EndMS,
+                    EndTick,
+                    EndFrameNumber
+                );
+            }
         }
 
         public struct Entry
@@ -114,6 +274,39 @@ namespace BepMod.Data
             public List<Actor> Actors;
             public List<Actor> ActorsInRange;
 
+
+            public static string CSVHeader = String.Join(",",
+                "Index",
+                "Tick",
+                "FrameNumber",
+                "ElapsedMS",
+                "Scenario",
+                "ParticipantPosition.X",
+                "ParticipantPosition.Y",
+                "ParticipantPosition.Z",
+                "ParticipantHeading",
+                "ParticipantCameraRotation.X",
+                "ParticipantCameraRotation.Z",
+                "ParticipantSpeed",
+                "LookingAtScreen",
+                "GazeScreenCoords.X",
+                "GazeScreenCoords.Y",
+                "SmoothedGazeScreenCoords.X",
+                "SmoothedGazeScreenCoords.Y",
+                "GazeRayResult.DitHitAnything",
+                "GazeRayResult.HitCoords.X",
+                "GazeRayResult.HitCoords.Y",
+                "GazeRayResult.HitCoords.Z",
+                "GazeRayResult.DitHitEntity",
+                "GazeRayResult.HitEntity.Handle",
+                "GazingAtActor",
+                "GazeActor",
+                "GazeActor.Position.X",
+                "GazeActor.Position.Y",
+                "GazeActor.Position.Z",
+                "ActiveTriggers",
+                "ActorsInRange"
+            );
 
             public string ToCSV()
             {
@@ -170,7 +363,7 @@ namespace BepMod.Data
 
             e.Index = ++CurrentIndex;
             e.Tick = CurrentTick;
-            e.ElapsedMS = ActiveScenario.stopwatch.ElapsedMilliseconds;
+            e.ElapsedMS = ActiveScenario.Stopwatch.ElapsedMilliseconds;
 
             e.Scenario = ActiveScenario;
 
@@ -213,7 +406,36 @@ namespace BepMod.Data
 
         public void WriteEntry(Entry e)
         {
-            Writer.WriteLine(e.ToCSV());
+            LogWriter.WriteLine(e.ToCSV());
+        }
+
+        public Measurement CreateMeasurement(Actor actor)
+        {
+            return CreateMeasurement().StartOnGazeAtActor(actor);
+        }
+
+        public Measurement CreateMeasurement(Trigger trigger)
+        {
+            Measurement measurement = CreateMeasurement();
+
+            measurement.StartEvent = "ENTER";
+            measurement.StartName = trigger.ToString();
+
+            return measurement;
+        }
+
+        public Measurement CreateMeasurement(string startEvent = "", string startName = "")
+        {
+            Measurement measurement = new Measurement(this, startEvent, startName);
+
+            _measurements.Add(measurement);
+
+            return measurement;
+        }
+
+        public void WriteMeasurement(Measurement measurement)
+        {
+            MeasurementsWriter.WriteLine(measurement.ToCSV());
         }
 
         public void ShowEntry(Entry e)
@@ -385,17 +607,19 @@ namespace BepMod.Data
             }
 
             StartTime = DateTime.Now;
+            string formattedDateTime = StartTime.ToString(DateTimeFormat);
 
-            Writer = File.CreateText(
-                Path.Combine(BasePath,
-                    String.Format(DateLogNameFormat,
-                        StartTime.ToString(DateLogDateTimeFormat),
-                        Name
-                    )));
+            LogFileName = Path.Combine(BasePath,
+                String.Format(LogFileNameFormat, formattedDateTime, Name));
+            LogWriter = File.CreateText(LogFileName);
+            LogWriter.AutoFlush = true;
+            LogWriter.WriteLine(Entry.CSVHeader);
 
-            Writer.AutoFlush = true;
-
-            Writer.WriteLine(CSVHeader);
+            MeasurementFileName = Path.Combine(BasePath,
+                String.Format(MeasurementFileNameFormat, formattedDateTime, Name));
+            MeasurementsWriter = File.CreateText(MeasurementFileName);
+            MeasurementsWriter.AutoFlush = true;
+            MeasurementsWriter.WriteLine(Measurement.CSVHeader);
 
             ActiveScenario = activeScenario;
             Running = true;
@@ -406,9 +630,20 @@ namespace BepMod.Data
             if (Running)
             {
                 // Flush log and clean up
-                Writer.Flush();
-                Writer.Close();
-                Writer = null;
+                LogWriter.Flush();
+                LogWriter.Close();
+                LogWriter = null;
+                LogFileName = null;
+
+                // write all remaining measurements and clean up
+                _activeMeasurements.ForEach(WriteMeasurement);
+                MeasurementsWriter.Flush();
+                MeasurementsWriter.Close();
+                MeasurementsWriter = null;
+                MeasurementFileName = null;
+
+                _activeMeasurements.Clear();
+                _measurements.Clear();
 
                 Running = false;
 
@@ -424,19 +659,26 @@ namespace BepMod.Data
             if (Running)
             {
                 Entry e = BuildEntry();
-                entries.Add(e);
-                coords.Add(e.SmoothedGazeScreenCoords);
+                _entries.Add(e);
+                _coords.Add(e.SmoothedGazeScreenCoords);
 
                 WriteEntry(e);
                 if (debugLevel > 0)
                 {
                     ShowEntryGaze(e);
                 }
-                if (debugLevel > 1)
+                if (debugLevel > 3)
                 {
                     ShowEntry(e);
                 }
                 PreviousEntry = e;
+
+                StartMeasurements(e);
+                StopMeasurements(e);
+
+                // int i = 7;
+                // ShowMessage(Measurement.CSVHeader, i++);
+                // _measurements.ForEach(m => ShowMessage(m.ToCSV(), i++));
 
                 //if (e.GazeRayResult.DitHitEntity)
                 //{
@@ -444,6 +686,29 @@ namespace BepMod.Data
                 //    e.GazeRayResult.HitEntity.ApplyForce(GameplayCamera.Direction.Normalized);
                 //}
             }
+        }
+        private List<Measurement> StartMeasurements(Entry e)
+        {
+            List<Measurement> started = _activeMeasurements.FindAll(
+                m => (m.StartActor != null && e.GazeActor != null && e.GazeActor == m.StartActor));
+
+            started.ForEach(m => m.Start());
+
+            _activeMeasurements.AddRange(started);
+
+            return started;
+        }
+
+        private List<Measurement> StopMeasurements(Entry e)
+        {
+            List<Measurement> stopped = _activeMeasurements.FindAll(
+                m => (m.StopActor != null && e.GazeActor != null && e.GazeActor == m.StopActor));
+
+            stopped.ForEach(m => m.Stop());
+
+            _activeMeasurements.RemoveAll(m => stopped.Contains(m));
+
+            return stopped;
         }
     }
 }

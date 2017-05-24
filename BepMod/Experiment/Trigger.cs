@@ -14,6 +14,8 @@ namespace BepMod.Experiment
 
     class Trigger : IDisposable
     {
+        public Entity entity;
+
         public int index;
 
         public float distance;
@@ -21,9 +23,13 @@ namespace BepMod.Experiment
         public event TriggerEnterEventHandler TriggerEnter;
         public event TriggerExitEventHandler TriggerExit;
 
-        public Vector3 triggerPosition;
-        public float triggerRadius;
-        public String triggerName;
+        private Vector3 _position;
+        private float _radius;
+        private String _name;
+
+        private Action<Trigger> _enter;
+        private Action<Trigger> _exit;
+
         public bool triggeredInside = false;
 
         public string NameFormat = "TRIGGER_{0}";
@@ -31,12 +37,24 @@ namespace BepMod.Experiment
         public Trigger(
             Vector3 position,
             float radius = 10.0f,
-            String name = ""
+            String name = "",
+            Entity entity = null,
+            Action<Trigger> enter = null,
+            Action<Trigger> exit = null
         )
         {
-            triggerPosition = position;
-            triggerRadius = radius;
-            triggerName = name;
+            _position = position;
+            _radius = radius;
+            _name = name;
+
+            _enter = enter;
+            _exit = exit;
+
+            if (entity == null)
+            {
+                entity = Game.Player.Character;
+            }
+            this.entity = entity;
         }
 
         public void Dispose()
@@ -45,15 +63,15 @@ namespace BepMod.Experiment
 
         override public string ToString()
         {
-            return String.Format(NameFormat, triggerName);
+            return String.Format(NameFormat, _name);
         }
 
         protected virtual void OnTriggerEnter(EventArgs e)
         {
-            Log("Entered trigger: " + triggerName);
+            Log("Entered trigger: " + _name);
             if (debugLevel > 0)
             {
-                ShowMessage("Entered trigger: " + triggerName);
+                ShowMessage("Entered trigger: " + _name);
             }
 
             TriggerEnter?.Invoke(this, index, e);
@@ -61,10 +79,10 @@ namespace BepMod.Experiment
 
         protected virtual void OnTriggerExit(EventArgs e)
         {
-            Log("Exited trigger: " + triggerName);
+            Log("Exited trigger: " + _name);
             if (debugLevel > 0)
             {
-                ShowMessage("Exited trigger: " + triggerName);
+                ShowMessage("Exited trigger: " + _name);
             }
 
             TriggerExit?.Invoke(this, index, e);
@@ -72,16 +90,14 @@ namespace BepMod.Experiment
 
         public virtual void DoTick()
         {
-            Vector3 playerPos = Game.Player.Character.Position;
-
-            distance = triggerPosition.DistanceTo(playerPos);
-            bool inside = distance < triggerRadius;
+            distance = entity.Position.DistanceTo2D(_position);
+            bool inside = distance < _radius;
 
             if (debugLevel > 2)
             {
                 RenderCircleOnGround(
-                    triggerPosition,
-                    triggerRadius,
+                    _position,
+                    _radius,
                     inside ? Color.Green : Color.Red
                 );
             }
@@ -90,11 +106,13 @@ namespace BepMod.Experiment
             {
                 triggeredInside = true;
                 OnTriggerEnter(EventArgs.Empty);
+                _enter?.Invoke(this);
             }
             else if (!inside && triggeredInside)
             {
                 triggeredInside = false;
                 OnTriggerExit(EventArgs.Empty);
+                _exit?.Invoke(this);
             }
         }
     }
