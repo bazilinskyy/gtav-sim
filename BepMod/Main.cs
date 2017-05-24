@@ -208,7 +208,7 @@ namespace BepMod.Data
             }
             else if (e.KeyCode == Keys.OemPeriod)
             {
-                if (debugLevel >= 3)
+                if (debugLevel >= 4)
                 {
                     debugLevel = 0;
                 }
@@ -217,14 +217,6 @@ namespace BepMod.Data
                     debugLevel++;
                 }
                 ClearMessages();
-            }
-            else if (e.KeyCode == Keys.S)
-            {
-                if (Game.Player.Character.IsInVehicle() &&
-                    Game.Player.Character.LastVehicle.Speed < 1.5f)
-                {
-                    Game.Player.Character.LastVehicle.Speed = 0.0f;
-                }
             }
         }
 
@@ -263,6 +255,7 @@ namespace BepMod.Data
         private void RunScenario(int index)
         {
             Log("Main.RunScenario()");
+            Game.FadeScreenOut(0);
             StopScenario();
             ActiveScenario = scenarios[index];
             ActiveScenario.Run(_logger, _smartEye);
@@ -274,6 +267,7 @@ namespace BepMod.Data
         }
 
         bool ticked = false;
+
         private void MainTick(object sender, EventArgs e)
         {
             menuPool.ProcessMenus();
@@ -297,6 +291,27 @@ namespace BepMod.Data
             _smartEye.DoTick();
             _logger.DoTick();
             Util.DoTick();
+
+            if (debugLevel > 1)
+            {
+                RenderCircleOnGround(
+                    Game.Player.Character.Position,
+                    5.0f,
+                    System.Drawing.Color.FromArgb(90, System.Drawing.Color.Purple)
+                );
+
+                RenderCircleOnGround(
+                    Game.Player.Character.Position,
+                    7.5f,
+                    System.Drawing.Color.FromArgb(60, System.Drawing.Color.Purple)
+                );
+
+                RenderCircleOnGround(
+                    Game.Player.Character.Position,
+                    10.0f,
+                    System.Drawing.Color.FromArgb(40, System.Drawing.Color.Purple)
+                );
+            }
         }
     }
 }

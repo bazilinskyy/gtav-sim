@@ -74,6 +74,8 @@ namespace BepMod.Data
             public UInt64 EndFrameNumber;
             public UInt64 ElapsedFrameNumber;
 
+            public float ActorDistance;
+
             public string StartEvent = "";
             public string StartName = "";
             public string StopEvent = "";
@@ -139,7 +141,13 @@ namespace BepMod.Data
                 {
                     StopEvent = stopEvent;
                 }
-                
+
+                if (_stopActor != null)
+                {
+                    ActorDistance = Game.Player.Character.Position.DistanceTo2D(_stopActor.Position);
+                }
+
+
                 EndTick = _logger.CurrentTick;
                 EndFrameNumber = _logger.smartEye.lastFrameNumber;
                 EndMS = _logger.ActiveScenario.Stopwatch.ElapsedMilliseconds;
@@ -208,7 +216,9 @@ namespace BepMod.Data
 
                 "EndMS",
                 "EndTick",
-                "EndFrameNumber"
+                "EndFrameNumber",
+
+                "ActorDistance"
             );
 
             public string ToCSV()
@@ -232,7 +242,9 @@ namespace BepMod.Data
 
                     EndMS,
                     EndTick,
-                    EndFrameNumber
+                    EndFrameNumber,
+
+                    ActorDistance
                 );
             }
         }
@@ -273,6 +285,7 @@ namespace BepMod.Data
             // Actors
             public List<Actor> Actors;
             public List<Actor> ActorsInRange;
+            public float ActorDistance;
 
 
             public static string CSVHeader = String.Join(",",
@@ -305,7 +318,8 @@ namespace BepMod.Data
                 "GazeActor.Position.Y",
                 "GazeActor.Position.Z",
                 "ActiveTriggers",
-                "ActorsInRange"
+                "ActorsInRange",
+                "ActorDistance"
             );
 
             public string ToCSV()
@@ -352,7 +366,9 @@ namespace BepMod.Data
                     (GazeActor != null) ? GazeActor.Position.Z.ToString(nfi) : "",
 
                     EscapeCSV(String.Join(",", ActiveTriggers)),
-                    EscapeCSV(String.Join(",", ActorsInRange))
+                    EscapeCSV(String.Join(",", ActorsInRange)),
+
+                    ActorDistance
                 );
             }
         }
@@ -442,21 +458,29 @@ namespace BepMod.Data
         {
             int i = ShowEntryStartIndex;
 
-            ShowMessage("Entry (" + e.Index + ")", i++);
-            ShowMessage("- Tick: " + e.Tick, i++);
+            // ShowMessage("Entry (" + e.Index + ")", i++);
+            // ShowMessage("- Tick: " + e.Tick, i++);
             ShowMessage("- FrameNumber: " + e.FrameNumber, i++);
             ShowMessage("- ElapsedMS: " + e.ElapsedMS, i++);
-            ShowMessage("- Scenario: " + e.Scenario, i++);
-            ShowMessage("- ParticipantPosition: " + e.ParticipantPosition, i++);
-            ShowMessage("- ParticipantHeading: " + e.ParticipantHeading, i++);
-            ShowMessage("- ParticipantSpeed: " + e.ParticipantSpeed, i++);
-            ShowMessage("- ParticipantCameraRotation: " + e.ParticipantCameraRotation, i++);
-            ShowMessage("- PreviousGazeScreenCoords: " + e.PreviousGazeScreenCoords, i++);
+            // ShowMessage("- Scenario: " + e.Scenario, i++);
+            // ShowMessage("- ParticipantPosition: " + e.ParticipantPosition, i++);
+            // ShowMessage("- ParticipantHeading: " + e.ParticipantHeading, i++);
+            // ShowMessage("- ParticipantSpeed: " + e.ParticipantSpeed, i++);
+            // ShowMessage("- ParticipantCameraRotation: " + e.ParticipantCameraRotation, i++);
+            // ShowMessage("- PreviousGazeScreenCoords: " + e.PreviousGazeScreenCoords, i++);
             ShowMessage("- LookingAtScreen: " + e.LookingAtScreen, i++);
-            ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
+            // ShowMessage("- GazeScreenCoords: " + e.GazeScreenCoords, i++);
             ShowMessage("- SmoothedGazeScreenCoords: " + e.SmoothedGazeScreenCoords, i++);
             ShowMessage("- GazeRayResult Hit: " + e.GazeRayResult.DitHitAnything, i++);
             ShowMessage("- GazeRayResult Entity: " + e.GazeRayResult.HitEntity, i++);
+            ShowMessage("- GazeRayResult Entity.GetHashCode(): " + 
+                (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.GetHashCode().ToString() : "-"), i++);
+            ShowMessage("- GazeRayResult Entity.Model.GetHashCode(): " + 
+                (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.Model.GetHashCode().ToString() : "-"), i++);
+            ShowMessage("- GazeRayResult Entity.Handle: " + 
+                (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.Handle.ToString() : "-"), i++);
+            ShowMessage("- GazeRayResult Entity.Position: " + 
+                (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.Position.ToString() : "-"), i++);
             ShowMessage("- GazeActor: " + e.GazeActor, i++);
             if (e.GazeActor != null)
             {
@@ -676,9 +700,19 @@ namespace BepMod.Data
                 StartMeasurements(e);
                 StopMeasurements(e);
 
-                // int i = 7;
-                // ShowMessage(Measurement.CSVHeader, i++);
-                // _measurements.ForEach(m => ShowMessage(m.ToCSV(), i++));
+                //if (debugLevel == 1)
+                //{
+                //    int i = 5;
+                //    ShowMessage(Measurement.CSVHeader, i++);
+                //    _measurements.ForEach(
+                //        m => {
+                //            if (m.Started || m.Stopped) 
+                //            {
+                //                ShowMessage(m.ToCSV(), i++);
+                //            }
+                //        }
+                //    );
+                //}
 
                 //if (e.GazeRayResult.DitHitEntity)
                 //{

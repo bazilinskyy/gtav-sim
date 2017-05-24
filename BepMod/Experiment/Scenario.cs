@@ -65,6 +65,8 @@ namespace BepMod.Experiment
 
         public virtual void Run(Logger logger, SmartEye smartEye)
         {
+            Game.FadeScreenOut(500);
+
             Stopwatch = new Stopwatch();
             Stopwatch.Stop();
 
@@ -153,7 +155,7 @@ namespace BepMod.Experiment
 
             vehicle.Speed = 0;
 
-            UI.Notify("Scenario loaded");
+            SetTimeout(() => Game.FadeScreenIn(1500), 500);
         }
 
         override public string ToString()
@@ -166,7 +168,7 @@ namespace BepMod.Experiment
             {
                 if (_participantRanRedLight == false)
                 {
-                    UI.ShowSubtitle("Pas op met stoplichten!", 3000);
+                    UI.ShowSubtitle("Rustig aan!", 3000);
                 }
 
                 _participantRanRedLight = true;
@@ -252,6 +254,19 @@ namespace BepMod.Experiment
                 World.CurrentDayTime = new TimeSpan(12, 0, 0);
 
                 Game.Player.Character.Health = 100;
+                Game.Player.Character.CanBeKnockedOffBike = false;
+
+                if (!Game.Player.Character.IsInVehicle())
+                {
+                    Game.Player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+                }
+
+                //if (Game.Player.Character.LastVehicle.HasCollidedWithAnything)
+                //{
+                //    ShowMessage("oh noh ;(", 18);
+                //    Game.Player.Character.LastVehicle.HasCollision = false;
+                //}
+
 
                 if (_participantRanRedLight) {
                     vehicle.Speed = 0.0f;

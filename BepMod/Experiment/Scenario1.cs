@@ -30,16 +30,25 @@ namespace BepMod.Experiment
                 new Vector3(-993.0f, -1260.9f, 5.3f)
             };
 
+            // VehicleHash = VehicleHash.Airbus;
+
             StartPosition = Points[0]; StartHeading = 315.0f;
             //StartPosition = Points[1]; StartHeading = 315.0f;
             //StartPosition = Points[2]; StartHeading = 322.0f;
             //StartPosition = Points[3]; StartHeading = 34.9f;
-            //StartPosition = Points[4]; StartHeading = 273.0f;
+            //StartPosition = new Vector3(-1004.3f, -1608.0f, 4.7f); StartHeading = 0.0f;
+            //StartPosition = Points[4]; StartHeading = 35.0f;
             //StartPosition = Points[5]; StartHeading = 30.0f;
-            // StartPosition = new Vector3(-1117.6f, -1532.5f, 3.9f); StartHeading = 30.0f;
-            // StartPosition = Points[6]; StartHeading = 30.0f;
+            //StartPosition = new Vector3(-1117.6f, -1532.5f, 3.9f); StartHeading = 30.0f;
+            //StartPosition = Points[6]; StartHeading = 30.0f;
             //StartPosition = Points[7]; StartHeading = 30.0f;
+            //StartPosition = Points[8]; StartHeading = 30.0f;
+            //StartPosition = Points[9]; StartHeading = 300.0f;
             //StartPosition = Points[10]; StartHeading = 300.0f;
+            //StartPosition = new Vector3(-1089.3f, -1378.6f, 4.7f); StartHeading = 250f;
+            //StartPosition = Points[11]; StartHeading = 300.0f;
+            //StartPosition = new Vector3(-1064.8f, -1338.2f, 4.9f); StartHeading = 340.0f;
+            //StartPosition = new Vector3(-1059.9f, -1324.3f, 5.1f); StartHeading = 340.0f;
         }
 
         public override void Initialise()
@@ -121,40 +130,39 @@ namespace BepMod.Experiment
 
             Trigger t3_1 = CreateTrigger(
                 new Vector3(-1006.4f, -1620.1f, 4.5f),
-                name: "3_1"
+                name: "3_1",
+                enter: t =>
+                {
+                    // drive to t-junction line
+                    a3.ped.Task.DriveTo(
+                        a3.vehicle,
+                        new Vector3(-1009.7f, -1554.6f, 4.7f),
+                        5.0f,
+                        10.0f
+                    );
+                }
             );
 
             Trigger t3_2 = CreateTrigger(
                 new Vector3(-1004.3f, -1608.0f, 4.7f),
                 radius: 7.5f,
-                name: "3_2"
+                name: "3_2",
+                enter: t => 
+                {
+                    _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a3);
+
+                    UI.ShowSubtitle("Ga hier rechtdoor");
+                    gps.SoundStraight.Play();
+
+                    // actor 3 turn in front of participant
+                    a3.DriveTo(
+                        Points[1],
+                        10.0f,
+                        drivingstyle: DrivingStyle.Rushed,
+                        destinationReached: () => a3.Remove()
+                    );
+                }
             );
-
-            t3_1.TriggerEnter += (sender, index, e) =>
-            {
-                // drive to t-junction line
-                a3.ped.Task.DriveTo(
-                    a3.vehicle,
-                    new Vector3(-1009.7f, -1554.6f, 4.7f),
-                    5.0f,
-                    10.0f
-                );
-            };
-
-            t3_2.TriggerEnter += (sender, index, e) =>
-            {
-                UI.ShowSubtitle("Ga hier rechtdoor");
-                gps.SoundStraight.Play();
-
-                // actor 3 turn in front of participant
-                a3.ped.Task.DriveTo(
-                    a3.vehicle,
-                    Points[1],
-                    5.0f,
-                    10.0f,
-                    (int)DrivingStyle.Rushed
-                );
-            };
             #endregion
 
             #region Event 4
@@ -166,43 +174,43 @@ namespace BepMod.Experiment
                 name: "4"
             );
 
-            Trigger t4_1 = CreateTrigger(
+            CreateTrigger(
                 new Vector3(-1020.3f, -1557.6f, 4.8f),
                 radius: 7.5f,
-                name: "4_1"
+                name: "4_1",
+                enter: t =>
+                {
+                    // drive to t-junction
+                    a4.ped.Task.DriveTo(
+                        a4.vehicle,
+                        new Vector3(-1071.8f, -1496.2f, 4.6f),
+                        radius: 5.0f,
+                        speed: 12.5f
+                    );
+                }
             );
 
-            Trigger t4_2 = CreateTrigger(
+            CreateTrigger(
                 Points[4],
                 radius: 7.5f,
-                name: "4_2"
+                name: "4_2",
+                enter: t =>
+                {
+                    _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a4);
+
+                    UI.ShowSubtitle("Ga hier linksaf", 3000);
+                    gps.SoundLeft.Play();
+
+                    // cross the road
+                    a4.ped.Task.DriveTo(
+                        a4.vehicle,
+                        Points[0],
+                        radius: 5.0f,
+                        speed: a4.distance / 2,
+                        drivingstyle: (int)DrivingStyle.Rushed
+                    );
+                }
             );
-
-            t4_1.TriggerEnter += (sender, index, e) =>
-            {
-                // drive to t-junction
-                a4.ped.Task.DriveTo(
-                    a4.vehicle,
-                    new Vector3(-1071.8f, -1496.2f, 4.6f),
-                    radius: 5.0f,
-                    speed: 12.5f
-                );
-            };
-
-            t4_2.TriggerEnter += (sender, index, e) =>
-            {
-                UI.ShowSubtitle("Ga hier linksaf", 3000);
-                gps.SoundLeft.Play();
-
-                // cross the road
-                a4.ped.Task.DriveTo(
-                    a4.vehicle,
-                    Points[0],
-                    radius: 5.0f,
-                    speed: a4.distance / 2,
-                    drivingstyle: (int)DrivingStyle.Rushed
-                );
-            };
             #endregion
 
             #region Event 5
@@ -213,33 +221,33 @@ namespace BepMod.Experiment
                 name: "5"
             );
 
-            Trigger t5_1 = CreateTrigger(
+            CreateTrigger(
                 new Vector3(-1069.1f, -1530.1f, 4.5f),
                 radius: 7.5f,
-                name: "5_1"
+                name: "5_1",
+                enter: t =>
+                {
+                    _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a5);
+
+                    a5.ped.Task.FollowPointRoute(
+                        new Vector3(-1104.9f, -1534.6f, 4.0f),
+                        new Vector3(-1108.4f, -1527.8f, 6.4f)
+                    );
+
+                    trafficLightsColor = TrafficLightColor.Green;
+                }
             );
 
-            Trigger t5_2 = CreateTrigger(
+            CreateTrigger(
                 Points[5],
                 radius: 7.5f,
-                name: "5_2"
+                name: "5_2",
+                enter: t =>
+                {
+                    UI.ShowSubtitle("Ga hier rechtsaf", 3000);
+                    gps.SoundRight.Play();
+                }
             );
-
-            t5_1.TriggerEnter += (sender, index, e) =>
-            {
-                a5.ped.Task.FollowPointRoute(
-                    new Vector3(-1104.9f, -1534.6f, 4.0f),
-                    new Vector3(-1108.4f, -1527.8f, 6.4f)
-                );
-
-                trafficLightsColor = TrafficLightColor.Green;
-            };
-
-            t5_2.TriggerEnter += (sender, index, e) =>
-            {
-                UI.ShowSubtitle("Ga hier rechtsaf", 3000);
-                gps.SoundRight.Play();
-            };
             #endregion
 
             #region Event 6
@@ -254,7 +262,7 @@ namespace BepMod.Experiment
 
             // oncoming bus at busstop
             Actor a6_2 = CreateActor(
-                position: new Vector3(-1171.8f, -1467.0f, 4.3f),
+                position: new Vector3(-1169.7f, -1469.9f, 4.4f),
                 heading: 210.7f,
                 pedHash: PedHash.Brad,
                 vehicleHash: VehicleHash.Airbus,
@@ -291,15 +299,12 @@ namespace BepMod.Experiment
             Logger.Measurement m6 = _logger.CreateMeasurement();
 
             CreateTrigger(
-                Points[6],
+                new Vector3(-1135.7f, -1506.3f, 4.0f),
                 radius: 7.5f,
                 name: "6_2",
                 enter: t =>
                 {
-                    m6.Start(t);
-
-                    UI.ShowSubtitle("Ga hier rechtdoor", 3000);
-                    gps.SoundStraight.Play();
+                    m6.Start(t).StopOnGazeAtActor(a6_2);
 
                     trafficLightsColor = TrafficLightColor.Red;
 
@@ -312,7 +317,7 @@ namespace BepMod.Experiment
                 },
                 exit: t => {
                     CheckRedLight();
-                    m6.Stop("RAN_RED_LIGHT", _participantRanRedLight ? "1" : "0");
+                    m6.Stop(_participantRanRedLight ? "1" : "0", "RAN_RED_LIGHT");
                 }
             );
 
@@ -323,7 +328,12 @@ namespace BepMod.Experiment
                 entity: a6_1.vehicle,
                 enter: t =>
                 {
-                    SetTimeout(() => trafficLightsColor = TrafficLightColor.Green, 3000);
+                    SetTimeout(() => {
+                        UI.ShowSubtitle("Ga hier rechtdoor", 3000);
+                        gps.SoundStraight.Play();
+
+                        trafficLightsColor = TrafficLightColor.Green;
+                    }, 6000);
 
                     a6_2.DriveTo(
                         target: new Vector3(-1089.3f, -1444.2f, 4.7f),
@@ -359,12 +369,15 @@ namespace BepMod.Experiment
                 Points[7],
                 radius: 7.5f,
                 name: "7_1",
-                enter: t7_1 => a7_2.ped.Task.DriveTo(
-                    a7_2.vehicle,
-                    target: Points[5],
-                    radius: 5.0f,
-                    speed: 5.0f
-                )
+                enter: t7_1 => 
+                {
+                    a7_2.ped.Task.DriveTo(
+                        a7_2.vehicle,
+                        target: Points[5],
+                        radius: 5.0f,
+                        speed: 5.0f
+                    );
+                }
             );
 
             // open door
@@ -372,78 +385,236 @@ namespace BepMod.Experiment
                 new Vector3(-1168.0f, -1460.1f, 4.4f),
                 radius: 7.5f,
                 name: "7_2",
-                enter: t7_2 => a7_1.vehicle.OpenDoor(
-                    VehicleDoor.FrontLeftDoor,
-                    false,
-                    false
-                )
+                enter: t => {
+                    trafficLightsColor = TrafficLightColor.Yellow;
+                    SetTimeout(() => trafficLightsColor = TrafficLightColor.Red, 3000);
+
+                    _logger.CreateMeasurement().Start(t).StopOnGazeAtActor(a7_2);
+
+                    a7_1.vehicle.OpenDoor(
+                        VehicleDoor.FrontLeftDoor,
+                        false,
+                        false
+                    );
+                }
             );
             #endregion
             
             #region Event 8
-            Actor p81 = CreateActor(
+            Actor a8_1 = CreateActor(
                 new Vector3(-1205.8f, -1448.1f, 3.9f),
                 heading: 304.8f,
                 radius: 5.0f,
                 pedHash: PedHash.Brad,
-                vehicleHash: VehicleHash.Prairie
-            );
-
-            Trigger t81 = CreateTrigger(
-                Points[8],
-                radius: 7.5f,
+                vehicleHash: VehicleHash.Prairie,
                 name: "8_1"
             );
 
-            t81.TriggerEnter += (sender, index, e) =>
-            {
-                UI.ShowSubtitle("Ga hier rechtsaf", 3000);
-                gps.SoundRight.Play();
+            Logger.Measurement m8 = _logger.CreateMeasurement();
 
-                p81.vehicle.Speed = 5.0f;
-                p81.ped.Task.DriveTo(
-                    p81.vehicle,
-                    target: Points[Points.Length - 1],
-                    radius: 1.0f,
-                    speed: 10.0f,
-                    drivingstyle: (int)DrivingStyle.IgnoreLights
-                );
+            CreateTrigger(
+                Points[8],
+                radius: 7.5f,
+                name: "8_1",
+                enter: t =>
+                {
+                    trafficLightsColor = TrafficLightColor.Red;
+                    m8.Start(t);
 
-                trafficLightsColor = TrafficLightColor.Green;
-            };
+                    a8_1.vehicle.Speed = 5.0f;
+                    a8_1.DriveTo(
+                        target: Points[Points.Length - 1],
+                        speed: 10.0f,
+                        drivingstyle: DrivingStyle.IgnoreLights,
+                        destinationReached: () => a8_1.Remove()
+                    );
+                },
+                exit: t => {
+                    CheckRedLight();
+                    m8.Stop(_participantRanRedLight ? "1" : "0", "RAN_RED_LIGHT");
+                }
+            );
+
+            CreateTrigger(
+                new Vector3(-1166.2f, -1415.6f, 4.3f),
+                name: "8_2",
+                entity: a8_1.vehicle,
+                enter: t => {
+                    trafficLightsColor = TrafficLightColor.Green;
+                }
+            );
             #endregion
-            
+
             #region Event 9
-            Trigger t9_1 = CreateTrigger(
+            Actor a9 = CreateActor(
+                new Vector3(-1148.9f, -1369.2f, 4.5f),
+                209.5f,
+                pedHash: PedHash.Beverly,
+                vehicleHash: VehicleHash.Zentorno
+            );
+
+            CreateTrigger(
+               new Vector3(-1154.9f, -1408.6f, 4.6f),
+                name: "9_1",
+                enter: t =>
+                {
+                    trafficLightsColor = TrafficLightColor.Yellow;
+                    SetTimeout(() => trafficLightsColor = TrafficLightColor.Red, 3000);
+                }
+            );
+
+            Logger.Measurement m9 = _logger.CreateMeasurement();
+
+            CreateTrigger(
                 Points[10],
                 radius: 7.5f,
-                name: "9_1"
+                name: "9_2",
+                enter: t =>
+                {
+                    SetTimeout(() =>
+                    {
+                        m9.Start(t);
+                        a9.MinSpeed = 25.0f;
+                        a9.DriveTo(
+                            Points[0],
+                            50.0f, 
+                            drivingstyle: DrivingStyle.Rushed,
+                            destinationReached: () =>
+                            {
+                                a9.Remove();
+                            }
+                        );
+                    }, 1500);
+
+                    trafficLightsColor = TrafficLightColor.Red;
+                },
+                exit: t => {
+                    CheckRedLight();
+                    m9.Stop(_participantRanRedLight ? "1" : "0", "RAN_RED_LIGHT");
+                }
             );
 
-            t9_1.TriggerEnter += (sender, index, e) =>
-            {
-                UI.ShowSubtitle("Ga hier rechtdoor", 3000);
-                gps.SoundStraight.Play();
-
-                trafficLightsColor = TrafficLightColor.Red;
-            };
+            CreateTrigger(
+                new Vector3(-1119.4f, -1424.0f, 4.7f),
+                name: "9_3",
+                entity: a9.vehicle,
+                enter: t =>
+                {
+                    SetTimeout(() => trafficLightsColor = TrafficLightColor.Green, 2000);
+                }
+            );
             #endregion
-            
+
             #region Event 10
-            Trigger t10_1 = CreateTrigger(
-                Points[11],
-                radius: 7.5f,
-                name: "10_1"
+            // actor from right
+            Actor a10_1 = CreateActor(
+                new Vector3(-1082.3f, -1402.4f, 4.7f), 340.9f,
+                pedHash: PedHash.Brad,
+                vehicleHash: VehicleHash.Verlierer2
+                //vehicleHash: VehicleHash.Prairie
             );
 
-            t10_1.TriggerEnter += (sender, index, e) =>
-            {
-                UI.ShowSubtitle("Ga hier linksaf", 3000);
-                gps.SoundLeft.Play();
+            // actor from left
+            Actor a10_2 = CreateActor(
+                new Vector3(-1076.0f, -1324.0f, 5.0f), 202.8f,
+                pedHash: PedHash.Brad,
+                vehicleHash: VehicleHash.Tornado
+            );
 
-                trafficLightsColor = TrafficLightColor.Red;
-            };
+            Logger.Measurement m10 = _logger.CreateMeasurement();
+
+            Trigger t10_1 = CreateTrigger(
+                new Vector3(-1091.8f, -1379.3f, 4.7f),
+                radius: 7.5f,
+                name: "10_1",
+                enter: t =>
+                {
+                    trafficLightsColor = TrafficLightColor.Red;
+
+                    m10.Start(t);
+
+                    UI.ShowSubtitle("Ga hier linksaf", 3000);
+                    gps.SoundLeft.Play();
+
+                    a10_1.DriveTo(Points[Points.Length - 1], 10.0f);
+                    a10_2.DriveTo(Points[0], 35.0f);
+                },
+                exit: t => {
+                    CheckRedLight();
+                    m10.Stop("RAN_RED_LIGHT", _participantRanRedLight ? "1" : "0");
+                }
+            );
+
+            CreateTrigger(
+                new Vector3(-1139.7f, -1501.6f, 4.0f),
+                name: "10_2",
+                entity: a10_2.vehicle,
+                exit: t =>
+                {
+                    trafficLightsColor = TrafficLightColor.Green;
+                }
+            );
             #endregion
+
+            #region Event 11
+            CreateTrigger(
+                new Vector3(-1064.8f, -1338.2f, 4.9f),
+                radius: 7.5f,
+                name: "11_1",
+                enter: t =>
+                {
+                    trafficLightsColor = TrafficLightColor.Yellow;
+                    SetTimeout(() => trafficLightsColor = TrafficLightColor.Red, 3000);
+                }
+            );
+
+            Logger.Measurement m11 = _logger.CreateMeasurement();
+
+            CreateTrigger(
+                new Vector3(-1059.9f, -1324.3f, 5.1f),
+                radius: 7.5f,
+                name: "11_2",
+                enter: t =>
+                {
+                    m11.Start(t);
+
+                    SetTimeout(() => {
+                        UI.ShowSubtitle("Ga hier rechtdoor");
+                        gps.SoundStraight.Play();
+
+                        trafficLightsColor = TrafficLightColor.Green;
+                    }, 3000);
+                },
+                exit: t => {
+                    CheckRedLight();
+                    m11.Stop(_participantRanRedLight ? "1" : "0", "RAN_RED_LIGHT");
+                }
+            );
+            #endregion
+
+            #region Event Finish
+            CreateTrigger(
+                new Vector3(-1009.8f, -1266.0f, 5.7f),
+                25.0f,
+                "FINISH",
+                enter: t =>
+                {
+                    gps.SoundUHaveArived.Play();
+
+                    SetTimeout(() => Game.FadeScreenOut(2500), 500);
+
+                    // stop loggers etc
+
+                    SetTimeout(() =>
+                    {
+                        // stop scenario
+                        // load new / next scenario
+                        Game.FadeScreenIn(2500);
+                    }, 7000);
+                }
+            );
+            #endregion
+
 
             UI.ShowSubtitle("Scenario 1", 2000);
         }

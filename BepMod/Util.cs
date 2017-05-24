@@ -13,7 +13,7 @@ namespace BepMod
 
     static class Util
     {
-        public static int debugLevel = 0;
+        public static int debugLevel = 1;
 
         public static String[] messages = new String[30];
 
@@ -23,11 +23,14 @@ namespace BepMod
         public static HashSet<int> pedPool = new HashSet<int>();
 
         public static List<int> trafficSignalHashes = new List<int> {
+            865627822,
             -655644382,
             862871082,
             1043035044
         };
         public static TrafficLightColor trafficLightsColor = TrafficLightColor.Auto;
+
+        public static int LastShowMessageIndex = 0;
 
         static Util() { }
 
@@ -87,9 +90,26 @@ namespace BepMod
             }
         }
 
-        public static void ShowMessage(string message = null, int index = 0)
+        public static void ShowMessage(string message = null, int index = -1)
         {
-            messages[index] = string.IsNullOrEmpty(message) ? null : message;
+            if (!string.IsNullOrEmpty(message))
+            {
+                if (index < 0)
+                {
+                    index = LastShowMessageIndex;
+                }
+
+                if (index >= 0)
+                {
+                    LastShowMessageIndex = index;
+                }
+
+                messages[index] = string.IsNullOrEmpty(message) ? null : message;
+            }
+            else
+            {
+                messages[index] = null;
+            }            
         }
 
         public static void ShowMessages()

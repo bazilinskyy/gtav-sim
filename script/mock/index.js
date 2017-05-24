@@ -59,7 +59,7 @@ function randn_bm() {
     return Math.sqrt(-2.0*Math.log(u))*Math.cos(2.0*Math.PI*v);
 }
 
-const timeout = 16;
+const timeout = 25;
 let x = uiWidth/2, xd = 1;
 let y = uiHeight/2, yd = 1;
 const xMargin = uiWidth/4;
@@ -92,15 +92,19 @@ const getMessage = () => {
       ['UInt32', ++frame]],
     [0x0016, 
       ['Double', ((uiWidth - x) / uiWidth)]],
+    // u % 250 < 100 ? 
     [64, 
       ['UInt16', 1],
       ['Double', 0],
       ['Double', 0],
       ['Double', 0],
-      ['Double', x + randn_bm()*10],
-      ['Double', y + randn_bm()*10],
+      ['Double', uiWidth/2],
+      ['Double', uiHeight/2],
+      // ['Double', x + randn_bm()*10],
+      // ['Double', y + randn_bm()*10],
       ['Double', 0],
-      ['String', 'hoi']]
+      ['String', 'hoi']] 
+      // : []
   ])
 };
 

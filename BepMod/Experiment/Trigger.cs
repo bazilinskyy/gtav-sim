@@ -69,9 +69,9 @@ namespace BepMod.Experiment
         protected virtual void OnTriggerEnter(EventArgs e)
         {
             Log("Entered trigger: " + _name);
-            if (debugLevel > 0)
+            if (debugLevel > 1)
             {
-                ShowMessage("Entered trigger: " + _name);
+                ShowMessage("Entered trigger: " + ToString());
             }
 
             TriggerEnter?.Invoke(this, index, e);
@@ -80,9 +80,9 @@ namespace BepMod.Experiment
         protected virtual void OnTriggerExit(EventArgs e)
         {
             Log("Exited trigger: " + _name);
-            if (debugLevel > 0)
+            if (debugLevel > 1)
             {
-                ShowMessage("Exited trigger: " + _name);
+                ShowMessage("Exited trigger: " + ToString());
             }
 
             TriggerExit?.Invoke(this, index, e);

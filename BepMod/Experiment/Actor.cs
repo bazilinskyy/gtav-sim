@@ -77,6 +77,7 @@ namespace BepMod.Experiment
                 ped = World.CreatePed(pedHash, position, heading);
 
                 ped.CanBeDraggedOutOfVehicle = false;
+                ped.CanRagdoll = false;
                 ped.IsInvincible = true;
 
                 if (vehicle != null)
@@ -131,7 +132,7 @@ namespace BepMod.Experiment
         protected virtual void OnActorInsideRadius(EventArgs e)
         {
             Log("Actor inside radius: " + _name);
-            if (debugLevel > 0)
+            if (debugLevel > 1)
             {
                 ShowMessage("Actor inside radius: " + _name);
             }
@@ -142,7 +143,7 @@ namespace BepMod.Experiment
         protected virtual void OnActorOutsideRadius(EventArgs e)
         {
             Log("Actor outside radius: " + _name);
-            if (debugLevel > 0)
+            if (debugLevel > 1)
             {
                 ShowMessage("Actor outside radius: " + _name);
             }

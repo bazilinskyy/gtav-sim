@@ -53,7 +53,7 @@ namespace BepMod.Data
             if (!string.IsNullOrEmpty(status))
             {
                 Log("SmartEye: " + status);
-                if (debugLevel > 0)
+                if (debugLevel > 1)
                 {
                     ShowMessage(status, 1);
                 }
