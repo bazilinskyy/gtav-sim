@@ -46,6 +46,9 @@ namespace BepMod.Data
         public bool DataTimedOut;
         public bool GazeTimedOut;
 
+        private UdpClient _socket;
+        private List<UdpClient> _sockets = new List<UdpClient>();
+
         public void DoTick()
         {
             _tick++;
@@ -142,8 +145,6 @@ namespace BepMod.Data
             return range.Except(portsInUse).FirstOrDefault();
         }
 
-        UdpClient socket;
-
         ~SmartEye()
         {
             Log("~SmartEye()");
@@ -178,10 +179,10 @@ namespace BepMod.Data
                 Listening = false;
             }
 
-            if (socket != null)
+            if (_socket != null)
             {
-                socket.Close();
-                socket = null;
+                _socket.Close();
+                _socket = null;
             }
 
             prevFrameNumber = 0;
@@ -195,11 +196,11 @@ namespace BepMod.Data
 
         public void PacketListener()
         {
-            socket = null;
+            _socket = null;
 
             try
             {
-                socket = new UdpClient(listenPort);
+                _socket = new UdpClient(listenPort);
             }
             catch (SocketException e)
             {
@@ -207,16 +208,16 @@ namespace BepMod.Data
                 status = "SmartEye listen failed";
             }
 
-            if (socket != null)
+            if (_socket != null)
             {
-                IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+                IPEndPoint groupEP = new IPEndPoint(IPAddress.Parse("172.16.0.10"), listenPort);
                 status = "SmartEye listening on " + listenPort.ToString();
 
                 while (Listening)
                 {
                     try
                     {
-                        byte[] data = socket.Receive(ref groupEP);
+                        byte[] data = _socket.Receive(ref groupEP);
 
                         Packet res = new Packet(data);
 
@@ -245,10 +246,10 @@ namespace BepMod.Data
                 }
             }
 
-            if (socket != null)
+            if (_socket != null)
             {
-                socket.Close();
-                socket = null;
+                _socket.Close();
+                _socket = null;
             }
         }
 
