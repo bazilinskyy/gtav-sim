@@ -27,10 +27,12 @@ namespace BepMod.Experiment
                 new Vector3(-1144.7f, -1400.7f, 4.8f),
                 new Vector3(-1093.6f, -1378.0f, 4.8f),
                 new Vector3(-1057.7f, -1320.7f, 5.1f),
-                new Vector3(-993.0f, -1260.9f, 5.3f)
+                new Vector3(-1007.7f, -1267.7f, 5.6f)
             };
 
             // VehicleHash = VehicleHash.Airbus;
+            //VehicleHash = VehicleHash.Tyrus;
+            //VehicleHash = VehicleHash.CarbonRS;
 
             StartPosition = Points[0]; StartHeading = 315.0f;
             //StartPosition = Points[1]; StartHeading = 315.0f;
@@ -44,9 +46,11 @@ namespace BepMod.Experiment
             //StartPosition = Points[7]; StartHeading = 30.0f;
             //StartPosition = Points[8]; StartHeading = 30.0f;
             //StartPosition = Points[9]; StartHeading = 300.0f;
-            //StartPosition = Points[10]; StartHeading = 300.0f;
+            StartPosition = Points[10]; StartHeading = 300.0f;
             //StartPosition = new Vector3(-1089.3f, -1378.6f, 4.7f); StartHeading = 250f;
+            //StartPosition = new Vector3(-1110.1f, -1382.3f, 4.8f); StartHeading = 290.2f;
             //StartPosition = Points[11]; StartHeading = 300.0f;
+            //StartPosition = Points[12]; StartHeading = 330.0f;
             //StartPosition = new Vector3(-1064.8f, -1338.2f, 4.9f); StartHeading = 340.0f;
             //StartPosition = new Vector3(-1059.9f, -1324.3f, 5.1f); StartHeading = 340.0f;
         }
@@ -56,7 +60,8 @@ namespace BepMod.Experiment
             Log("Scenario1.Initialise()");
 
             trafficLightsColor = TrafficLightColor.Green;
-            
+            vehicle.MaxSpeed = 7.5f;
+
             #region Event 1
             Actor a1 = CreateActor(
                 position: new Vector3(-1047.0f, -1641.7f, 4.4f),
@@ -80,7 +85,7 @@ namespace BepMod.Experiment
                     a1.vehicle.Speed = 5.0f;
 
                     a1.DriveTo(
-                        target: Points[Points.Length - 1],
+                        target: new Vector3(-1021.1f, -1454.7f, 4.5f),
                         speed: 3.0f,
                         destinationRadius: 7.5f,
                         destinationReached: () => a1.Remove()
@@ -111,7 +116,7 @@ namespace BepMod.Experiment
 
                     a2.vehicle.Speed = 4.0f;
                     a2.DriveTo(
-                        Points[Points.Length - 1],
+                        new Vector3(-1029.2f, -1457.9f, 4.5f),
                         drivingstyle: DrivingStyle.Rushed,
                         destinationReached: () => a2.Remove()
                     );
@@ -298,8 +303,9 @@ namespace BepMod.Experiment
 
             Logger.Measurement m6 = _logger.CreateMeasurement();
 
+            // car from right
             CreateTrigger(
-                new Vector3(-1135.7f, -1506.3f, 4.0f),
+                new Vector3(-1136.4f, -1505.7f, 4.0f),
                 radius: 7.5f,
                 name: "6_2",
                 enter: t =>
@@ -321,6 +327,7 @@ namespace BepMod.Experiment
                 }
             );
 
+            // bus turns across intersection
             CreateTrigger(
                 new Vector3(-1161.0f, -1510.2f, 4.0f),
                 radius: 7.5f,
@@ -336,7 +343,7 @@ namespace BepMod.Experiment
                     }, 6000);
 
                     a6_2.DriveTo(
-                        target: new Vector3(-1089.3f, -1444.2f, 4.7f),
+                        target: new Vector3(-1073.9f, -1476.2f, 4.6f),
                         speed: 5.0f,
                         drivingstyle: DrivingStyle.IgnoreLights,
                         destinationReached: () => a6_2.Remove()
@@ -421,9 +428,12 @@ namespace BepMod.Experiment
                     trafficLightsColor = TrafficLightColor.Red;
                     m8.Start(t);
 
+                    gps.SoundRight.Play();
+                    UI.ShowSubtitle("Ga hier rechtsaf", 3000);
+
                     a8_1.vehicle.Speed = 5.0f;
                     a8_1.DriveTo(
-                        target: Points[Points.Length - 1],
+                        target: new Vector3(-1086.4f, -1473.5f, 4.6f),
                         speed: 10.0f,
                         drivingstyle: DrivingStyle.IgnoreLights,
                         destinationReached: () => a8_1.Remove()
@@ -447,14 +457,13 @@ namespace BepMod.Experiment
 
             #region Event 9
             Actor a9 = CreateActor(
-                new Vector3(-1148.9f, -1369.2f, 4.5f),
-                209.5f,
+                new Vector3(-1103.5f, -1441.3f, 4.7f), 29.7f,
                 pedHash: PedHash.Beverly,
                 vehicleHash: VehicleHash.Zentorno
             );
 
             CreateTrigger(
-               new Vector3(-1154.9f, -1408.6f, 4.6f),
+                new Vector3(-1154.9f, -1408.6f, 4.6f),
                 name: "9_1",
                 enter: t =>
                 {
@@ -466,23 +475,22 @@ namespace BepMod.Experiment
             Logger.Measurement m9 = _logger.CreateMeasurement();
 
             CreateTrigger(
-                Points[10],
+                new Vector3(-1149.5f, -1402.8f, 5.1f),
                 radius: 7.5f,
                 name: "9_2",
                 enter: t =>
                 {
                     SetTimeout(() =>
                     {
+                        _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a9);
+
                         m9.Start(t);
-                        a9.MinSpeed = 25.0f;
+                        a9.vehicle.Speed = 50.0f;
                         a9.DriveTo(
-                            Points[0],
-                            50.0f, 
+                            new Vector3(-1180.9f, -1206.3f, 6.0f),
+                            80.0f, 
                             drivingstyle: DrivingStyle.Rushed,
-                            destinationReached: () =>
-                            {
-                                a9.Remove();
-                            }
+                            destinationReached: () => a9.Remove()
                         );
                     }, 1500);
 
@@ -495,7 +503,7 @@ namespace BepMod.Experiment
             );
 
             CreateTrigger(
-                new Vector3(-1119.4f, -1424.0f, 4.7f),
+                new Vector3(-1140.9f, -1375.7f, 4.7f),
                 name: "9_3",
                 entity: a9.vehicle,
                 enter: t =>
@@ -508,55 +516,82 @@ namespace BepMod.Experiment
             #region Event 10
             // actor from right
             Actor a10_1 = CreateActor(
-                new Vector3(-1082.3f, -1402.4f, 4.7f), 340.9f,
+                new Vector3(-1088.7f, -1442.6f, 4.7f), 357.4f,
                 pedHash: PedHash.Brad,
-                vehicleHash: VehicleHash.Verlierer2
-                //vehicleHash: VehicleHash.Prairie
+                vehicleHash: VehicleHash.Verlierer2,
+                name: "10_1"
             );
 
             // actor from left
             Actor a10_2 = CreateActor(
-                new Vector3(-1076.0f, -1324.0f, 5.0f), 202.8f,
+                new Vector3(-1094.0f, -1317.4f, 4.9f), 295.1f,
                 pedHash: PedHash.Brad,
-                vehicleHash: VehicleHash.Tornado
+                vehicleHash: VehicleHash.Double,
+                name: "10_2"
             );
 
             Logger.Measurement m10 = _logger.CreateMeasurement();
 
-            Trigger t10_1 = CreateTrigger(
-                new Vector3(-1091.8f, -1379.3f, 4.7f),
+            CreateTrigger(
+                new Vector3(-1110.1f, -1382.3f, 4.8f),
                 radius: 7.5f,
                 name: "10_1",
                 enter: t =>
                 {
-                    trafficLightsColor = TrafficLightColor.Red;
+                    _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a10_1);
+                    _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a10_2);
 
-                    m10.Start(t);
+                    trafficLightsColor = TrafficLightColor.Green;
 
-                    UI.ShowSubtitle("Ga hier linksaf", 3000);
-                    gps.SoundLeft.Play();
-
-                    a10_1.DriveTo(Points[Points.Length - 1], 10.0f);
-                    a10_2.DriveTo(Points[0], 35.0f);
-                },
-                exit: t => {
-                    //CheckRedLight();
-                    //m10.Stop("RAN_RED_LIGHT", _participantRanRedLight ? "1" : "0");
+                    a10_1.DriveTo(Points[Points.Length - 1], 10.0f,
+                        destinationReached: () => a10_1.Remove());
+                    a10_2.DriveTo(new Vector3(-1088.7f, -1442.6f, 4.7f), 35.0f);
                 }
             );
 
             CreateTrigger(
-                new Vector3(-1139.7f, -1501.6f, 4.0f),
+                Points[11],
+                radius: 7.5f,
                 name: "10_2",
+                enter: t =>
+                {
+                    m10.Start(t);
+
+                    UI.ShowSubtitle("Ga hier linksaf", 3000);
+                    gps.SoundLeft.Play();
+                },
+                exit: t => {
+                    m10.Stop("WAITED", "0");
+                }
+            );
+
+            CreateTrigger(
+                new Vector3(-1078.8f, -1381.1f, 4.8f),
+                name: "10_3",
                 entity: a10_2.vehicle,
                 exit: t =>
                 {
                     trafficLightsColor = TrafficLightColor.Green;
+                    m10.Stop("WAITED", "1");
                 }
             );
             #endregion
 
             #region Event 11
+            // vehicle evading police
+            Actor a11_1 = CreateActor(
+                new Vector3(-1172.2f, -1351.9f, 4.6f), 295.2f,
+                pedHash: PedHash.Barry,
+                vehicleHash: VehicleHash.Vacca
+            );
+
+            // chasing cop car
+            Actor a11_2 = CreateActor(
+                new Vector3(-1199.9f, -1364.8f, 4.1f), 292.7f,
+                pedHash: PedHash.Barry,
+                vehicleHash: VehicleHash.Police
+            );
+            
             CreateTrigger(
                 new Vector3(-1064.8f, -1338.2f, 4.9f),
                 radius: 7.5f,
@@ -577,17 +612,36 @@ namespace BepMod.Experiment
                 enter: t =>
                 {
                     m11.Start(t);
+                    _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a11_1);
+                    _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a11_2);
 
-                    SetTimeout(() => {
-                        UI.ShowSubtitle("Ga hier rechtdoor");
-                        gps.SoundStraight.Play();
+                    a11_1.vehicle.Speed = 70.0f;
+                    a11_1.DriveTo(
+                        new Vector3(-992.4f, -1138.6f, 1.7f),
+                        80.0f,
+                        drivingstyle: DrivingStyle.Rushed
+                    );
 
-                        trafficLightsColor = TrafficLightColor.Green;
-                    }, 3000);
+                    a11_2.vehicle.Speed = 70.0f;
+                    a11_2.ped.Task.VehicleChase(a11_1.ped);
+                    a11_2.vehicle.SirenActive = true;
+                    a11_2.vehicle.SoundHorn(10000);
+
+                    SetTimeout(() => trafficLightsColor = TrafficLightColor.Green, 9000);
                 },
                 exit: t => {
                     CheckRedLight();
                     m11.Stop(_participantRanRedLight ? "1" : "0", "RAN_RED_LIGHT");
+                }
+            );
+
+            CreateTrigger(
+                new Vector3(-1037.9f, -1287.6f, 5.7f),
+                name: "11_3",
+                enter: t =>
+                {
+                    UI.ShowSubtitle("Ga hier rechtdoor");
+                    gps.SoundStraight.Play();
                 }
             );
             #endregion
@@ -601,16 +655,16 @@ namespace BepMod.Experiment
                 {
                     gps.SoundUHaveArived.Play();
 
-                    SetTimeout(() => Game.FadeScreenOut(2500), 500);
-
                     // stop loggers etc
+                    UI.ShowSubtitle("Thank you for your time");
 
-                    SetTimeout(() =>
-                    {
-                        // stop scenario
-                        // load new / next scenario
-                        Game.FadeScreenIn(2500);
-                    }, 7000);
+                    UI.Notify("Log files:");
+                    UI.Notify(_logger.LogFileName);
+                    UI.Notify(_logger.MeasurementFileName);
+
+                    _logger.Stop();
+
+                    SetTimeout(() => Game.FadeScreenOut(2500), 2500);
                 }
             );
             #endregion

@@ -124,8 +124,6 @@ namespace BepMod.Experiment
 
             vehiclePool.Add(vehicle.Handle);
 
-            vehicle.MaxSpeed = 7.5f;
-
             vehicle.PlaceOnGround();
 
             Game.Player.Character.Position = vehicle.Position;
@@ -271,7 +269,6 @@ namespace BepMod.Experiment
                 if (_participantRanRedLight) {
                     vehicle.Speed = 0.0f;
                     CheckRedLight();
-
                 }
 
                 DoRemoveVehicles();

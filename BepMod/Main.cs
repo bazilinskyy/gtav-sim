@@ -250,6 +250,8 @@ namespace BepMod.Data
                 ActiveScenario.Stop();
                 ActiveScenario = null;
             }
+
+            Game.FadeScreenIn(2500);
         }
 
         private void RunScenario(int index)

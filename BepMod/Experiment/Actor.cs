@@ -167,7 +167,7 @@ namespace BepMod.Experiment
             if (debugLevel > 1 && distance < 75.0f)
             {
                 Vector2 sc;
-                Gta5EyeTracking.Geometry.WorldToScreenRel_Native(Position, out sc);
+                Gta5EyeTracking.Geometry.WorldToScreenRel(Position, out sc);
 
                 if (sc.X != 0 || sc.Y != 0)
                 {
@@ -178,8 +178,8 @@ namespace BepMod.Experiment
                             vehicle?.Speed
                         ),
                         new Point(
-                            (int)(((sc.X + 1) / 2) * uiWidth),
-                            (int)(((sc.Y + 1) / 2) * uiHeight)
+                            (int)(((sc.X + 1) / 2) * UI.WIDTH),
+                            (int)(((sc.Y + 1) / 2) * UI.HEIGHT)
                         ),
                         0.5f,
                         font: GTA.Font.ChaletLondon,
@@ -231,12 +231,15 @@ namespace BepMod.Experiment
             _destinationRadius = destinationRadius;
             _destinationReached = destinationReached;
 
-            ped.Task.DriveTo(
-                vehicle, 
-                target, 
-                speed, 
-                drivingstyle.GetHashCode()
-            );
+            if (ped != null && vehicle != null)
+            {
+                ped.Task.DriveTo(
+                    vehicle, 
+                    target, 
+                    speed, 
+                    drivingstyle.GetHashCode()
+                );
+            }
         }
     }
 }

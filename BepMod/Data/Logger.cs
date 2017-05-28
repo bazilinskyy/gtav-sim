@@ -706,8 +706,9 @@ namespace BepMod.Data
                 //    int i = 5;
                 //    ShowMessage(Measurement.CSVHeader, i++);
                 //    _measurements.ForEach(
-                //        m => {
-                //            if (m.Started || m.Stopped) 
+                //        m =>
+                //        {
+                //            if (m.Started || m.Stopped)
                 //            {
                 //                ShowMessage(m.ToCSV(), i++);
                 //            }
