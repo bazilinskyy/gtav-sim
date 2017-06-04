@@ -114,7 +114,7 @@ namespace BepMod.Data
                 {
                     StartName = startName;
                 }
-                
+
                 StartTick = _logger.CurrentTick;
                 StartFrameNumber = _logger.smartEye.lastFrameNumber;
                 StartMS = _logger.ActiveScenario.Stopwatch.ElapsedMilliseconds;
@@ -131,7 +131,7 @@ namespace BepMod.Data
                 if (_stopped || !_started) {
                     return this;
                 }
-                
+
                 if (stopName != "")
                 {
                     StopName = stopName;
@@ -163,7 +163,7 @@ namespace BepMod.Data
                 return this;
             }
 
-            public Measurement StartOnGazeAtActor(Actor actor) 
+            public Measurement StartOnGazeAtActor(Actor actor)
             {
                 if (StartName == "")
                 {
@@ -244,7 +244,7 @@ namespace BepMod.Data
                     EndTick,
                     EndFrameNumber,
 
-                    ActorDistance
+                    ActorDistance.ToString(nfi)
                 );
             }
         }
@@ -395,7 +395,7 @@ namespace BepMod.Data
             e.ParticipantCameraRotation = GameplayCamera.Rotation;
 
             e.GazeRayResult = GetGazeRay(e.SmoothedGazeScreenCoords);
-            
+
             if (e.GazeRayResult.DitHitEntity)
             {
                 Actor actor = ActiveScenario.FindActorByEntity(e.GazeRayResult.HitEntity);
@@ -404,7 +404,7 @@ namespace BepMod.Data
                     e.GazeActor = actor;
                 }
             }
-            
+
             if (e.GazeActor == null)
             {
                 e.GazeActor = GetGazeActor(e.SmoothedGazeScreenCoords, out _);
@@ -474,13 +474,13 @@ namespace BepMod.Data
             ShowMessage("- UI: " + uiWidth + ":" + uiHeight, i++);
             ShowMessage("- GazeRayResult Hit: " + e.GazeRayResult.DitHitAnything, i++);
             ShowMessage("- GazeRayResult Entity: " + e.GazeRayResult.HitEntity, i++);
-            ShowMessage("- GazeRayResult Entity.GetHashCode(): " + 
+            ShowMessage("- GazeRayResult Entity.GetHashCode(): " +
                 (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.GetHashCode().ToString() : "-"), i++);
-            ShowMessage("- GazeRayResult Entity.Model.GetHashCode(): " + 
+            ShowMessage("- GazeRayResult Entity.Model.GetHashCode(): " +
                 (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.Model.GetHashCode().ToString() : "-"), i++);
-            ShowMessage("- GazeRayResult Entity.Handle: " + 
+            ShowMessage("- GazeRayResult Entity.Handle: " +
                 (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.Handle.ToString() : "-"), i++);
-            ShowMessage("- GazeRayResult Entity.Position: " + 
+            ShowMessage("- GazeRayResult Entity.Position: " +
                 (e.GazeRayResult.DitHitEntity ? e.GazeRayResult.HitEntity.Position.ToString() : "-"), i++);
             ShowMessage("- GazeActor: " + e.GazeActor, i++);
             if (e.GazeActor != null)
@@ -516,7 +516,7 @@ namespace BepMod.Data
                 Color.FromArgb(150, Color.Yellow)
             );
             et.Draw();
-            
+
             World.DrawMarker(
                 MarkerType.DebugSphere,
                 e.GazeRayResult.HitCoords,
@@ -525,7 +525,7 @@ namespace BepMod.Data
                 new Vector3(1, 1, 1),
                 Color.FromArgb(127, Color.White)
             );
-            
+
             if (e.GazeActor != null)
             {
                 World.DrawMarker(

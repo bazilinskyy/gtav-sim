@@ -152,7 +152,7 @@ namespace BepMod.Experiment
                 new Vector3(-1004.3f, -1608.0f, 4.7f),
                 radius: 7.5f,
                 name: "3_2",
-                enter: t => 
+                enter: t =>
                 {
                     _logger.CreateMeasurement(t).Start().StopOnGazeAtActor(a3);
 
@@ -283,7 +283,7 @@ namespace BepMod.Experiment
                 enter: t =>
                 {
                     trafficLightsColor = TrafficLightColor.Yellow;
-                    SetTimeout(() => 
+                    SetTimeout(() =>
                     {
                         trafficLightsColor = TrafficLightColor.Red;
 
@@ -351,7 +351,7 @@ namespace BepMod.Experiment
                 }
             );
             #endregion
-            
+
             #region Event 7
             Actor a7_1 = CreateActor(
                 new Vector3(-1166.0f, -1458.9f, 3.8f),
@@ -376,7 +376,7 @@ namespace BepMod.Experiment
                 Points[7],
                 radius: 7.5f,
                 name: "7_1",
-                enter: t7_1 => 
+                enter: t7_1 =>
                 {
                     a7_2.ped.Task.DriveTo(
                         a7_2.vehicle,
@@ -406,7 +406,7 @@ namespace BepMod.Experiment
                 }
             );
             #endregion
-            
+
             #region Event 8
             Actor a8_1 = CreateActor(
                 new Vector3(-1205.8f, -1448.1f, 3.9f),
@@ -459,7 +459,8 @@ namespace BepMod.Experiment
             Actor a9 = CreateActor(
                 new Vector3(-1103.5f, -1441.3f, 4.7f), 29.7f,
                 pedHash: PedHash.Beverly,
-                vehicleHash: VehicleHash.Zentorno
+                vehicleHash: VehicleHash.Zentorno,
+                name: "9"
             );
 
             CreateTrigger(
@@ -488,7 +489,7 @@ namespace BepMod.Experiment
                         a9.vehicle.Speed = 50.0f;
                         a9.DriveTo(
                             new Vector3(-1180.9f, -1206.3f, 6.0f),
-                            80.0f, 
+                            80.0f,
                             drivingstyle: DrivingStyle.Rushed,
                             destinationReached: () => a9.Remove()
                         );
@@ -582,16 +583,18 @@ namespace BepMod.Experiment
             Actor a11_1 = CreateActor(
                 new Vector3(-1172.2f, -1351.9f, 4.6f), 295.2f,
                 pedHash: PedHash.Barry,
-                vehicleHash: VehicleHash.Vacca
+                vehicleHash: VehicleHash.Vacca,
+                name: "11_1"
             );
 
             // chasing cop car
             Actor a11_2 = CreateActor(
                 new Vector3(-1199.9f, -1364.8f, 4.1f), 292.7f,
                 pedHash: PedHash.Barry,
-                vehicleHash: VehicleHash.Police
+                vehicleHash: VehicleHash.Police,
+                name: "11_2"
             );
-            
+
             CreateTrigger(
                 new Vector3(-1064.8f, -1338.2f, 4.9f),
                 radius: 7.5f,
