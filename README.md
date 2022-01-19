@@ -1,7 +1,7 @@
 # Cycling simulator based on GTA V
 
 ## Usage of the simualator
-The simulator is open-source and free to use. It is based on the commercially-sold videogame. So, having a licensed copy of the game is a requirement. The simulator is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
+The simulator is open-source and free to use. It is based on the commercially-sold videogame. So, having a licensed copy of the game is a requirement. The simulator is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact pavlo.bazilinskyy@gmail.com.
 
 ### Citation
 If you use the simulator for academic work please cite the following paper.
